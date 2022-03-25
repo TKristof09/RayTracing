@@ -8,6 +8,7 @@
 
 namespace math{
 
+
     template<unsigned int L, typename T>
     vec<L, T> operator*(const vec<L,T>& v, T scalar)
     {
@@ -32,6 +33,13 @@ namespace math{
         vec<L, T> temp(scalar);
         return v * 1 / scalar;
     }
+
+	template<unsigned int L, typename T>
+    vec<L, T> operator-(const vec<L,T>& v)
+    {
+		return static_cast<T>(-1) * v;
+    }
+
 	template<typename T>
     T componentSum(const vec<2,T>& v)
     {
