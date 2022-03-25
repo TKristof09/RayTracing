@@ -40,7 +40,7 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
 
 	outRecord.t = root;
 	outRecord.point = r.At(root);
-	outRecord.normal = (outRecord.point - m_center) / m_radius; // unit length normal
+	outRecord.SetNormal(r, (outRecord.point - m_center) / m_radius);
 	return true;
 
 }

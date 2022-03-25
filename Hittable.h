@@ -8,7 +8,15 @@ struct HitRecord
 {
 	double t;
 	math::Vec3d point;
-	math::Vec3d normal; // unit length
+	math::Vec3d normal; // unit length, always points against the ray direction, use SetNormal()
+	bool frontFace;
+
+	// outwardNormal is a unit length normal vector facing outwards of the surface
+	inline void SetNormal(const Ray& r, const math::Vec3d& outwardNormal)
+	{
+		frontFace = math::dot(r.GetDir(), outwardNormal) < 0;
+		normal = frontFace ? outwardNormal : -outwardNormal;
+	}
 };
 
 class Hittable
