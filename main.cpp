@@ -1,22 +1,17 @@
 #include <iostream>
 #include <stdint.h>
-#include <random>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 #include "3DMath/3DMath.h"
+#include "3DMath/Random.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "HittableList.h"
 #include "Camera.h"
 
-double RandomDouble(double min = 0.0, double max = 1.0)
-{
-	static std::uniform_real_distribution<double> distribution(min, max);
-    static std::mt19937 generator;
-    return distribution(generator);
-}
+
 
 void WriteColor(std::ostream& out, math::Vec3d color, uint32_t numSamples)
 {
@@ -37,16 +32,18 @@ void WriteColor(std::ostream& out, math::Vec3d color, uint32_t numSamples)
 
 
 
-math::Vec3d RayColor(const Ray& r, const HittableList& world)
+math::Vec3d RayColor(const Ray& r, const HittableList& world, int depth)
 {
 
-
+	if(depth <= 0)
+		return math::Vec3d(0);
 	HitRecord rec;
 
 
 	if(world.Hit(r, 0, std::numeric_limits<double>::infinity(), rec))
 	{
-		return 0.5 * (rec.normal + math::Vec3d(1));
+		math::Vec3d target = rec.point + rec.normal + math::RandomInUnitSphere<double>();
+		return 0.5 * RayColor(Ray(rec.point, target - rec.point), world, depth - 1);
 	}
 
 	// background
@@ -57,6 +54,7 @@ math::Vec3d RayColor(const Ray& r, const HittableList& world)
 int main()
 {
 	const uint32_t numSamples = 100;
+	const int maxDepth = 10;
 	const double aspectRatio = 16.0 / 9.0;
 	const uint32_t imageWidth = 400;
 	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
@@ -83,10 +81,10 @@ int main()
 			math::Vec3d color(0);
 			for(int s = 0; s < numSamples; ++s)
 			{
-				double u = (j + RandomDouble()) / (imageWidth - 1);
-				double v = (i + RandomDouble()) / (imageHeight - 1);
+				double u = (j + math::RandomReal<double>()) / (imageWidth - 1);
+				double v = (i + math::RandomReal<double>()) / (imageHeight - 1);
 
-				color += RayColor(cam.GetRay(u,v), world);
+				color += RayColor(cam.GetRay(u,v), world, maxDepth);
 
 			}
 			double r = color.r;
