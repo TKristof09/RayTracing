@@ -4,6 +4,7 @@
 #include "3DMath/3DMath.h"
 #include "Ray.h"
 #include "Sphere.h"
+#include "HittableList.h"
 
 void WriteColor(std::ostream& out, math::Vec3d color)
 {
@@ -15,16 +16,14 @@ void WriteColor(std::ostream& out, math::Vec3d color)
 
 
 
-math::Vec3d RayColor(const Ray& r)
+math::Vec3d RayColor(const Ray& r, const HittableList& world)
 {
-	math::Vec3d center = math::Vec3d(0,0,-1);
-	double radius = 0.5;
-	Sphere s(center, radius);
+
 
 	HitRecord rec;
 
 
-	if(s.Hit(r, 0, 1e5, rec))
+	if(world.Hit(r, 0, std::numeric_limits<double>::infinity(), rec))
 	{
 		return 0.5 * (rec.normal + math::Vec3d(1));
 	}
@@ -51,6 +50,13 @@ int main()
 	math::Vec3d vertical(0, viewPortHeight, 0);
 	math::Vec3d bottomLeft = origin - horizontal / 2.0 - vertical / 2.0 - math::Vec3d(0, 0, focalLength);
 
+	// world
+	HittableList world;
+	world.Add(std::make_shared<Sphere>(math::Vec3d(0,0,-1), 0.5));
+	world.Add(std::make_shared<Sphere>(math::Vec3d(0,-100.5,-1), 100)); // "ground"
+
+
+
 	// Render into a PPM image
 	std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
 	for(int i = imageHeight - 1; i >= 0; --i)
@@ -64,7 +70,7 @@ int main()
 			Ray r(origin, bottomLeft + u * horizontal + v * vertical - origin);
 
 
-			WriteColor(std::cout, RayColor(r));
+			WriteColor(std::cout, RayColor(r, world));
 
 		}
 	}
