@@ -53,5 +53,24 @@ namespace math
             return v2;
     }
 
+    template<typename T>
+    T min(T v1, T v2)
+    {
+        if (v1 < v2)
+            return v1;
+        else
+            return v2;
+    }
+
+	template<typename T>
+	T clamp(T v, T min, T max)
+	{
+		if (v < min)
+			return min;
+		if (v > max)
+			return max;
+		return v;
+	}
+
 }
 #endif
