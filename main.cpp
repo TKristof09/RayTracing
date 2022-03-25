@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stdint.h>
+#include <filesystem>
+
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -13,25 +15,6 @@
 
 
 
-void WriteColor(std::ostream& out, math::Vec3d color, uint32_t numSamples)
-{
-	double r = color.r;
-	double g = color.g;
-	double b = color.b;
-
-	double scale = 1.0 / numSamples;
-	r *= scale;
-	g *= scale;
-	b *= scale;
-
-	out << static_cast<uint32_t>(256 * math::clamp(r, 0.0, 0.999)) << '\n'
-		<< static_cast<uint32_t>(256 * math::clamp(g, 0.0, 0.999)) << '\n'
-		<< static_cast<uint32_t>(256 * math::clamp(b, 0.0, 0.999)) << '\n';
-}
-
-
-
-
 math::Vec3d RayColor(const Ray& r, const HittableList& world, int depth)
 {
 
@@ -40,15 +23,35 @@ math::Vec3d RayColor(const Ray& r, const HittableList& world, int depth)
 	HitRecord rec;
 
 
-	if(world.Hit(r, 0, std::numeric_limits<double>::infinity(), rec))
+	if(world.Hit(r, 0.001, std::numeric_limits<double>::infinity(), rec))
 	{
-		math::Vec3d target = rec.point + rec.normal + math::RandomInUnitSphere<double>();
+		// Hemispherical scattering
+		math::Vec3d v = math::RandomInUnitSphere<double>();
+		math::Vec3d target = rec.point + (math::dot(v, rec.normal) > 0.0 ? v : -v);
+
+		// Lambertian scattering
+		//math::Vec3d target = rec.point + rec.normal + math::RandomOnUnitSphere<double>();
 		return 0.5 * RayColor(Ray(rec.point, target - rec.point), world, depth - 1);
 	}
 
 	// background
 	double t = 0.5 * (math::normalize(r.GetDir()).y + 1.0);
 	return (1.0 - t) * math::Vec3d(1.0) + t * math::Vec3d(0.5, 0.7, 1.0);
+
+}
+
+std::string GetCurrentFilename(const std::string& base, const std::string& ext)
+{
+	std::filesystem::path p = std::filesystem::current_path();
+
+	int i = 0;
+	for(const auto& entry : std::filesystem::directory_iterator(p))
+	{
+		if(entry.path().filename().string().find(base) == 0 && entry.path().extension().string() == ext)
+			i++;
+	}
+
+	return base + std::to_string(i) + ext;
 
 }
 int main()
@@ -74,7 +77,7 @@ int main()
 	int index = 0;
 	for(int i = imageHeight - 1; i >= 0; --i)
 	{
-		std::cerr << "\rScanlines remaining: " << i << ' ' << std::flush;
+		std::cout << "\rScanlines remaining: " << i << ' ' << std::flush;
 		for(int j = 0; j < imageWidth; ++j)
 		{
 
@@ -91,10 +94,11 @@ int main()
 			double g = color.g;
 			double b = color.b;
 
+			// gamma correct for gamma = 2
 			double scale = 1.0 / numSamples;
-			r *= scale;
-			g *= scale;
-			b *= scale;
+			r = sqrt(r * scale);
+			g = sqrt(g * scale);
+			b = sqrt(b * scale);
 
 			imageData[index++] = 256 * math::clamp(r, 0.0, 0.999);
 			imageData[index++] = 256 * math::clamp(g, 0.0, 0.999);
@@ -104,8 +108,9 @@ int main()
 
 		}
 	}
-	stbi_write_png("image.png", imageWidth, imageHeight, 3, imageData.data(), imageWidth * 3);
-	std::cerr << "\nDone.\n";
+	std::string filename = GetCurrentFilename("image", ".png");
+	stbi_write_png(filename.c_str(), imageWidth, imageHeight, 3, imageData.data(), imageWidth * 3);
+	std::cout << "\nDone.\n" << "Wrote to: " << filename << std::endl;
 
 
 }
