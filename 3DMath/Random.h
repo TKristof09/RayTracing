@@ -27,6 +27,12 @@ namespace math
 				return res;
 		}
 	}
+	template<typename T>
+	vec<3,T> RandomOnUnitSphere()
+	{
+		return math::normalize(RandomInUnitSphere<T>());
+	}
+
 
 }
 #endif

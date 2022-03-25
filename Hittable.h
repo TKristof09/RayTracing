@@ -3,12 +3,15 @@
 
 #include "3DMath/3DMath.h"
 #include "Ray.h"
+#include <memory>
 
+class Material;
 struct HitRecord
 {
 	double t;
 	math::Vec3d point;
 	math::Vec3d normal; // unit length, always points against the ray direction, use SetNormal()
+	std::shared_ptr<Material> material;
 	bool frontFace;
 
 	// outwardNormal is a unit length normal vector facing outwards of the surface

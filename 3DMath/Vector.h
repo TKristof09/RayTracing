@@ -148,5 +148,11 @@ namespace math{
     {
         return (v1.x == v2.x) && (v1.y == v2.y) && (v1.z == v2.z) && (v1.w == v2.w);
     }
+
+	template<unsigned int L, typename T>
+	bool NearZero(const vec<L,T>& v)
+	{
+		return math::lengthSq(v) < 1e-10;
+	}
 }
 #endif

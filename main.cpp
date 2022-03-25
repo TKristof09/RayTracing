@@ -12,6 +12,7 @@
 #include "Sphere.h"
 #include "HittableList.h"
 #include "Camera.h"
+#include "Material.h"
 
 
 
@@ -26,12 +27,20 @@ math::Vec3d RayColor(const Ray& r, const HittableList& world, int depth)
 	if(world.Hit(r, 0.001, std::numeric_limits<double>::infinity(), rec))
 	{
 		// Hemispherical scattering
-		math::Vec3d v = math::RandomInUnitSphere<double>();
-		math::Vec3d target = rec.point + (math::dot(v, rec.normal) > 0.0 ? v : -v);
+		//math::Vec3d v = math::RandomInUnitSphere<double>();
+		//math::Vec3d target = rec.point + (math::dot(v, rec.normal) > 0.0 ? v : -v);
 
 		// Lambertian scattering
 		//math::Vec3d target = rec.point + rec.normal + math::RandomOnUnitSphere<double>();
-		return 0.5 * RayColor(Ray(rec.point, target - rec.point), world, depth - 1);
+
+		Ray scattered;
+		math::Vec3d attenuation;
+		if(rec.material->Scatter(r, rec, attenuation, scattered))
+			return attenuation * RayColor(scattered, world, depth - 1);
+		else
+			return math::Vec3d(0);
+
+		//return 0.5 * RayColor(Ray(rec.point, target - rec.point), world, depth - 1);
 	}
 
 	// background
@@ -65,10 +74,14 @@ int main()
 
 	// Camera
 	Camera cam;
+
+	// Materials
+	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0.0, 0.0));
+	auto groundMat = std::make_shared<Lambertian>(math::Vec3d(0.0, 0.8, 0.0));
 	// world
 	HittableList world;
-	world.Add(std::make_shared<Sphere>(math::Vec3d(0,0,-1), 0.5));
-	world.Add(std::make_shared<Sphere>(math::Vec3d(0,-100.5,-1), 100)); // "ground"
+	world.Add(std::make_shared<Sphere>(math::Vec3d(0,0,-1), 0.5, sphereMat));
+	world.Add(std::make_shared<Sphere>(math::Vec3d(0,-100.5,-1), 100, groundMat)); // "ground"
 
 
 
