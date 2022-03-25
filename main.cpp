@@ -3,6 +3,7 @@
 
 #include "3DMath/3DMath.h"
 #include "Ray.h"
+#include "Sphere.h"
 
 void WriteColor(std::ostream& out, math::Vec3d color)
 {
@@ -12,34 +13,24 @@ void WriteColor(std::ostream& out, math::Vec3d color)
 }
 
 
-// returns t such that Ray.At(t) is the closest point of intersection with the spehere
-double HitSphere(const Ray& r, const math::Vec3d center, double radius)
-{
-	math::Vec3d oc = r.GetOrigin() - center;
-	double a = math::lengthSq(r.GetDir());
-	double half_b = math::dot(r.GetDir(), oc); // we can simplify the 2 in the return value calculation
-	double c = math::lengthSq(oc) - radius * radius;
 
-	double delta = half_b * half_b - a * c; // actually delta / 4 but doesn't matter
-	if (delta < 0)
-		return -1;
-	else
-		return (-half_b - sqrt(delta)) / a;
-}
 
 math::Vec3d RayColor(const Ray& r)
 {
 	math::Vec3d center = math::Vec3d(0,0,-1);
 	double radius = 0.5;
-	double t = HitSphere(r, center, radius);
-	if(t > 0.0)
+	Sphere s(center, radius);
+
+	HitRecord rec;
+
+
+	if(s.Hit(r, 0, 1e5, rec))
 	{
-		math::Vec3d normal = math::normalize(r.At(t) - center);
-		return 0.5 * (normal + math::Vec3d(1));
+		return 0.5 * (rec.normal + math::Vec3d(1));
 	}
 
 	// background
-	t = 0.5 * (math::normalize(r.GetDir()).y + 1.0);
+	double t = 0.5 * (math::normalize(r.GetDir()).y + 1.0);
 	return (1.0 - t) * math::Vec3d(1.0) + t * math::Vec3d(0.5, 0.7, 1.0);
 
 }
