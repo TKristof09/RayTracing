@@ -78,8 +78,8 @@ int main()
 	// Materials
 	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0.0, 0.0));
 	auto groundMat = std::make_shared<Lambertian>(math::Vec3d(0.0, 0.8, 0.0));
-	auto metalLeft = std::make_shared<Metal>(math::Vec3d(0.8, 0.8, 0.8));
-	auto metalRight = std::make_shared<Metal>(math::Vec3d(0.8, 0.6, 0.2));
+	auto metalLeft = std::make_shared<Metal>(math::Vec3d(0.8, 0.8, 0.8), 0.3);
+	auto metalRight = std::make_shared<Metal>(math::Vec3d(0.8, 0.6, 0.2), 1);
 
 	// world
 	HittableList world;

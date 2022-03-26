@@ -35,12 +35,12 @@ private:
 class Metal : public Material
 {
 public:
-	Metal(const math::Vec3d& albedo):
-		m_albedo(albedo) {}
+	Metal(const math::Vec3d& albedo, double fuzziness):
+		m_albedo(albedo), m_fuzziness(fuzziness < 1 ? fuzziness : 1) {}
 
 	virtual bool Scatter(const Ray& r, const HitRecord& rec, math::Vec3d& outAttenuation, Ray& outRay) const override
 	{
-		math::Vec3d reflected = math::reflect(math::normalize(r.GetDir()), rec.normal);
+		math::Vec3d reflected = math::reflect(math::normalize(r.GetDir()), rec.normal) + m_fuzziness * math::RandomInUnitSphere<double>();
 		outRay = Ray(rec.point, reflected);
 		outAttenuation = m_albedo;
 
@@ -48,6 +48,7 @@ public:
 	}
 private:
 	math::Vec3d m_albedo;
+	double m_fuzziness;
 };
 
 #endif
