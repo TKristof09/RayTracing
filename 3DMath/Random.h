@@ -28,6 +28,18 @@ namespace math
 		}
 	}
 	template<typename T>
+	vec<2,T> RandomInUnitDisk()
+	{
+		while(true)
+		{
+			vec<2,T> res(RandomReal<T>(), RandomReal<T>());
+			if(math::lengthSq(res) >= T(1))
+				continue;
+			else
+				return res;
+		}
+	}
+	template<typename T>
 	vec<3,T> RandomOnUnitSphere()
 	{
 		return math::normalize(RandomInUnitSphere<T>());

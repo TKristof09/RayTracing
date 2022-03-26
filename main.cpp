@@ -68,23 +68,29 @@ int main()
 	const uint32_t numSamples = 100;
 	const int maxDepth = 10;
 	const double aspectRatio = 16.0 / 9.0;
+	const double aperture = 2.0;
+	math::Vec3d camPos = math::Vec3d(-2, 2, 1);
+	math::Vec3d lookAt = math::Vec3d(0, 0, -1);
+	double focusDist = math::length(camPos - lookAt);
+
 	const uint32_t imageWidth = 400;
 	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
 
 
 	// Camera
-	Camera cam;
+	Camera cam(camPos, lookAt, math::Vec3d(0, 1, 0), 20.0, aspectRatio, aperture, focusDist);
 
 	// Materials
-	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0.0, 0.0));
+	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0, 0.2));
 	auto groundMat = std::make_shared<Lambertian>(math::Vec3d(0.0, 0.8, 0.0));
-	auto metalLeft = std::make_shared<Metal>(math::Vec3d(0.8, 0.8, 0.8), 0.3);
+	auto sphereLeft = std::make_shared<Dielectric>(1.5);
 	auto metalRight = std::make_shared<Metal>(math::Vec3d(0.8, 0.6, 0.2), 1);
 
 	// world
 	HittableList world;
 	world.Add(std::make_shared<Sphere>(math::Vec3d(0,0,-1), 0.5, sphereMat));
-	world.Add(std::make_shared<Sphere>(math::Vec3d(-1,0,-1), 0.5, metalLeft));
+	world.Add(std::make_shared<Sphere>(math::Vec3d(-1,0,-1), 0.5, sphereLeft));
+	world.Add(std::make_shared<Sphere>(math::Vec3d(-1,0,-1), -0.4, sphereLeft));
 	world.Add(std::make_shared<Sphere>(math::Vec3d(1,0,-1), 0.5, metalRight));
 	world.Add(std::make_shared<Sphere>(math::Vec3d(0,-100.5,-1), 100, groundMat)); // "ground"
 

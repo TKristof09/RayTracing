@@ -28,11 +28,13 @@ namespace math
         return &(v.x);
     }
 
-    inline float ToRadians(float x)
+	template<typename T>
+    inline T ToRadians(T x)
     {
         return x * MATH_PI / 180.0;
     }
-    inline float ToDegrees(float x)
+	template<typename T>
+    inline T ToDegrees(T x)
     {
         return x * 180.0 / MATH_PI;
     }
