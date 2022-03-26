@@ -108,6 +108,15 @@ namespace math{
 	{
 		return v - 2 * math::dot(v,n) * n;
 	}
+	template<unsigned int L, typename T>
+	vec<L,T> refract(const vec<L,T>& v, const vec<L,T>& n, double etaI_over_etaR)
+	{
+		double cosTheta = fmin(dot(-v, n), 1.0); // cos <= 1.0
+		vec<L,T> rPerp = etaI_over_etaR * (v + cosTheta * n);
+		vec<L,T> rPar = -sqrt(fabs(1.0 - math::lengthSq(rPerp))) * n;
+
+		return rPerp + rPar;
+	}
 
 
     template<typename T>
