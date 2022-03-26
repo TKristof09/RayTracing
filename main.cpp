@@ -13,10 +13,10 @@
 #include "HittableList.h"
 #include "Camera.h"
 #include "Material.h"
+#include "BVH.h"
 
 
-
-math::Vec3d RayColor(const Ray& r, const HittableList& world, int depth)
+math::Vec3d RayColor(const Ray& r, const Hittable& world, int depth)
 {
 
 	if(depth <= 0)
@@ -72,7 +72,7 @@ int main()
 	math::Vec3d camPos = math::Vec3d(13, 2, 3);
 	math::Vec3d lookAt = math::Vec3d(0, 0, 0);
 	double focusDist = 10;
-	double aperture = 0.1;
+	double aperture = 0.2;
 
 	const uint32_t imageWidth = 1200;
 	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
@@ -89,7 +89,6 @@ int main()
 
 	// world
 	HittableList world;
-	world.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
 
 	for(int a = -11; a < 11; a++)
 	{
@@ -131,6 +130,14 @@ int main()
 	auto mat3 = std::make_shared<Metal>(math::Vec3d(0.7, 0.6, 0.5), 0);
 	world.Add(std::make_shared<Sphere>(math::Vec3d(4,1,0), 1, mat3));
 	// Render into a PPM image
+	//
+
+	BVHNode worldBVH(world);
+
+	HittableList objects;
+	objects.Add(std::make_shared<BVHNode>(worldBVH));
+	objects.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
+
 	std::vector<uint8_t> imageData(imageWidth * imageHeight * 3);
 	int index = 0;
 	for(int i = imageHeight - 1; i >= 0; --i)
@@ -145,7 +152,7 @@ int main()
 				double u = (j + math::RandomReal<double>()) / (imageWidth - 1);
 				double v = (i + math::RandomReal<double>()) / (imageHeight - 1);
 
-				color += RayColor(cam.GetRay(u,v), world, maxDepth);
+				color += RayColor(cam.GetRay(u,v), objects, maxDepth);
 
 			}
 			double r = color.r;

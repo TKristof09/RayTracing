@@ -6,6 +6,7 @@
 #include <memory>
 
 class Material;
+class AABB;
 struct HitRecord
 {
 	double t;
@@ -26,6 +27,7 @@ class Hittable
 {
 public:
 	virtual bool Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) const = 0;
+	virtual bool BoundingBox(AABB& outAABB) const = 0;
 };
 
 #endif

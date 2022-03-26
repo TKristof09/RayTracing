@@ -14,6 +14,13 @@ namespace math
 		return distribution(generator);
 	}
 
+	int RandomInt(int min = 0, int max = 1)
+	{
+		static std::uniform_int_distribution<int> distribution(min, max);
+		static std::mt19937 generator;
+		return distribution(generator);
+	}
+
 
 	template<typename T>
 	vec<3,T> RandomInUnitSphere()

@@ -8,7 +8,7 @@ namespace math{
     struct vec<2, T>
     {
         vec() {}
-        
+
         vec(T _s)
         {
             x = _s;
@@ -33,6 +33,25 @@ namespace math{
         vec<2, T>&  operator-=(const vec<2, U>& v);
         template<typename U>
         vec<2, T>&  operator*=(const vec<2, U>& v);
+
+		T operator[](int i) const
+		{
+			assert(i >= 0 && i < 2);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+			}
+		}
+		T& operator[](int i)
+		{
+			assert(i >= 0 && i < 2);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+			}
+		}
     };
 
 

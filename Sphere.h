@@ -2,6 +2,7 @@
 #define SPHERE_H
 
 #include "3DMath/3DMath.h"
+#include "AABB.h"
 #include "Hittable.h"
 
 class Sphere : public Hittable
@@ -12,6 +13,7 @@ public:
 		m_center(center), m_radius(radius), m_material(material){}
 
 	virtual bool Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) const override;
+	virtual bool BoundingBox(AABB& outAABB) const override;
 private:
 	math::Vec3d m_center;
 	double m_radius;
@@ -45,6 +47,11 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
 	outRecord.material = m_material;
 	return true;
 
+}
+bool Sphere::BoundingBox(AABB& outAABB) const
+{
+	outAABB = AABB(m_center - math::Vec3d(m_radius), m_center + math::Vec3d(m_radius));
+	return true;
 }
 
 

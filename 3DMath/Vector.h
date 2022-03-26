@@ -30,8 +30,10 @@ namespace math{
     template<unsigned int L, typename T>
     vec<L, T> operator/(T scalar, const vec<L,T>& v)
     {
-        vec<L, T> temp(scalar);
-        return v * 1 / scalar;
+		vec<L,T> res;
+		for(int i = 0; i < L; ++i)
+			res[i] = scalar / v[i];
+        return res;
     }
 
 	template<unsigned int L, typename T>

@@ -48,6 +48,27 @@ namespace math
         vec<3, T>&  operator-=(const vec<3, U>& v);
         template<typename U>
         vec<3, T>&  operator*=(const vec<3, U>& v);
+
+		T operator[](int i) const
+		{
+			assert(i >= 0 && i < 3);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+				case 2: return z;
+			}
+		}
+		T& operator[](int i)
+		{
+			assert(i >= 0 && i < 3);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+				case 2: return z;
+			}
+		}
     };
 
     template<typename T>
@@ -102,7 +123,7 @@ namespace math
     {
         return vec<3, T>(v1.x / scalar, v1.y / scalar, v1.z / scalar);
     }
-    
+
     template<typename T>
     T compMax(const vec<3, T>& v)
     {

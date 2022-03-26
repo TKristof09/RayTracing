@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+*.png
+*.ilk
+*.pdb
+.vs

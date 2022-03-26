@@ -47,6 +47,28 @@ namespace math
         vec<4, T>&  operator-=(const vec<4, U>& v);
         template<typename U>
         vec<4, T>&  operator*=(const vec<4, U>& v);
+		T operator[](int i) const
+		{
+			assert(i >= 0 && i < 4);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+				case 2: return z;
+				case 3: return w;
+			}
+		}
+		T& operator[](int i)
+		{
+			assert(i >= 0 && i < 4);
+			switch(i)
+			{
+				case 0: return x;
+				case 1: return y;
+				case 2: return z;
+				case 3: return w;
+			}
+		}
     };
 
     template<typename T>
