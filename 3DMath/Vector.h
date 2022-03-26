@@ -103,6 +103,13 @@ namespace math{
         return v / length(v);
     }
 
+	template<unsigned int L, typename T>
+	vec<L,T> reflect(const vec<L,T>& v, const vec<L,T>& n)
+	{
+		return v - 2 * math::dot(v,n) * n;
+	}
+
+
     template<typename T>
     std::string ToString(const vec<2, T>& v)
     {
