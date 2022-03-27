@@ -10,7 +10,13 @@ class Material
 {
 public:
 	virtual bool Scatter(const Ray& r, const HitRecord& rec, math::Vec3d& attenuation, Ray& rOut) const = 0;
+
+	virtual math::Vec3d Emitted(const math::Vec2d& uv, const math::Vec3d& point)
+	{
+		return math::Vec3d(0);
+	}
 };
+
 
 
 class Lambertian : public Material
@@ -99,4 +105,24 @@ private:
 	double m_refractionIndex;
 };
 
+class Emissive : public Material
+{
+public:
+	Emissive(std::shared_ptr<Texture> t):
+		m_emissionTexture(t) {}
+	Emissive(const math::Vec3d& color):
+		m_emissionTexture(std::make_shared<SolidColor>(color)) {}
+	virtual bool Scatter(const Ray& r, const HitRecord& rec, math::Vec3d& outAttenuation, Ray& outRay) const override
+	{
+		return false;
+	}
+
+	virtual math::Vec3d Emitted(const math::Vec2d& uv, const math::Vec3d& point)
+	{
+		return m_emissionTexture->Sample(uv, point);
+	}
+
+private:
+	std::shared_ptr<Texture> m_emissionTexture;
+};
 #endif

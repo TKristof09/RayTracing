@@ -17,7 +17,7 @@
 #include "Texture.h"
 
 
-math::Vec3d RayColor(const Ray& r, const Hittable& world, int depth)
+math::Vec3d RayColor(const Ray& r, const math::Vec3d& background, const Hittable& world, int depth)
 {
 
 	if(depth <= 0)
@@ -36,17 +36,17 @@ math::Vec3d RayColor(const Ray& r, const Hittable& world, int depth)
 
 		Ray scattered;
 		math::Vec3d attenuation;
+		math::Vec3d emitted = rec.material->Emitted(rec.uv, rec.point);
 		if(rec.material->Scatter(r, rec, attenuation, scattered))
-			return attenuation * RayColor(scattered, world, depth - 1);
+			return emitted + attenuation * RayColor(scattered, background, world, depth - 1);
 		else
-			return math::Vec3d(0);
+			return emitted;
 
 		//return 0.5 * RayColor(Ray(rec.point, target - rec.point), world, depth - 1);
 	}
 
 	// background
-	double t = 0.5 * (math::normalize(r.GetDir()).y + 1.0);
-	return (1.0 - t) * math::Vec3d(1.0) + t * math::Vec3d(0.5, 0.7, 1.0);
+	return background;
 
 }
 
@@ -136,7 +136,22 @@ HittableList Earth()
 	objects.Add(globe);
 	return objects;
 }
+HittableList EmissionScene()
+{
+	auto mat1 = std::make_shared<Lambertian>(math::Vec3d(1, 0, 0));
+	auto sphere1 = std::make_shared<Sphere>(math::Vec3d(0, 1, 0), 1, mat1);
 
+	auto mat2 = std::make_shared<Emissive>(15.0 * math::Vec3d(1, 1, 1));
+	auto sphere2 = std::make_shared<Sphere>(math::Vec3d(3, 2, 1), 1, mat2);
+
+	HittableList objects;
+	objects.Add(sphere1);
+	objects.Add(sphere2);
+
+	auto groundMat = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(math::Vec3d(0), math::Vec3d(1)));
+	objects.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
+	return objects;
+}
 int main()
 {
 	// Scene
@@ -146,8 +161,9 @@ int main()
 	double vFOV;
 	double focusDist;
 	double aperture;
+	math::Vec3d background;
 
-	switch(2)
+	switch(3)
 	{
 		case 1:
 			world = RandomScene();
@@ -156,17 +172,29 @@ int main()
 			vFOV = 20;
 			focusDist = 10;
 			aperture = 0.0;
+			background = math::Vec3d(0.7, 0.8, 1.0);
 			break;
 		case 2:
 			world = Earth();
-			camPos = math::Vec3d(13, 2, 3);
+			camPos = math::Vec3d(13, 2, 2);
 			lookAt = math::Vec3d(0, 0, 0);
 			vFOV = 20;
 			focusDist = 10;
 			aperture = 0.0;
+			background = math::Vec3d(0.7, 0.8, 1.0);
+			break;
+		case 3:
+			world = EmissionScene();
+			camPos = math::Vec3d(0, 2, 13);
+			lookAt = math::Vec3d(0, 0, 0);
+			vFOV = 20;
+			focusDist = 10;
+			aperture = 0.0;
+			background = math::Vec3d(0.1);
+			break;
 
 	}
-	const uint32_t numSamples = 100;
+	const uint32_t numSamples = 500;
 	const int maxDepth = 50;
 	const double aspectRatio = 3.0 / 2.0;
 
@@ -193,7 +221,7 @@ int main()
 				double u = (j + math::RandomReal<double>()) / (imageWidth - 1);
 				double v = (i + math::RandomReal<double>()) / (imageHeight - 1);
 
-				color += RayColor(cam.GetRay(u,v), world, maxDepth);
+				color += RayColor(cam.GetRay(u,v), background, world, maxDepth);
 
 			}
 			double r = color.r;
