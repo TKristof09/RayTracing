@@ -18,6 +18,14 @@ private:
 	math::Vec3d m_center;
 	double m_radius;
 	std::shared_ptr<Material> m_material;
+
+	static math::Vec2d GetUV(const math::Vec3d& point)
+	{
+		double theta = acos(-point.y);
+		double phi = atan2(-point.z, point.x + MATH_PI);
+
+		return math::Vec2d(phi / (2 * MATH_PI), theta / MATH_PI);
+	}
 };
 
 bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) const
@@ -43,8 +51,10 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
 
 	outRecord.t = root;
 	outRecord.point = r.At(root);
-	outRecord.SetNormal(r, (outRecord.point - m_center) / m_radius);
+	math::Vec3d normal = (outRecord.point - m_center) / m_radius;
+	outRecord.SetNormal(r, normal);
 	outRecord.material = m_material;
+	outRecord.uv = Sphere::GetUV(normal);
 	return true;
 
 }

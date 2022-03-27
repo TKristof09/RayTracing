@@ -13,6 +13,9 @@ struct HitRecord
 	math::Vec3d point;
 	math::Vec3d normal; // unit length, always points against the ray direction, use SetNormal()
 	std::shared_ptr<Material> material;
+	math::Vec2d uv;
+
+
 	bool frontFace;
 
 	// outwardNormal is a unit length normal vector facing outwards of the surface

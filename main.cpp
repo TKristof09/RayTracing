@@ -14,6 +14,7 @@
 #include "Camera.h"
 #include "Material.h"
 #include "BVH.h"
+#include "Texture.h"
 
 
 math::Vec3d RayColor(const Ray& r, const Hittable& world, int depth)
@@ -65,16 +66,16 @@ std::string GetCurrentFilename(const std::string& base, const std::string& ext)
 }
 int main()
 {
-	const uint32_t numSamples = 50;
-	const int maxDepth = 20;
+	const uint32_t numSamples = 100;
+	const int maxDepth = 50;
 	const double aspectRatio = 3.0 / 2.0;
 
 	math::Vec3d camPos = math::Vec3d(13, 2, 3);
 	math::Vec3d lookAt = math::Vec3d(0, 0, 0);
 	double focusDist = 10;
-	double aperture = 0.2;
+	double aperture = 0.0;
 
-	const uint32_t imageWidth = 1200;
+	const uint32_t imageWidth = 600;
 	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
 
 
@@ -83,7 +84,7 @@ int main()
 
 	// Materials
 	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0, 0.2));
-	auto groundMat = std::make_shared<Lambertian>(math::Vec3d(0.5, 0.5, 0.5));
+	auto groundMat = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(math::Vec3d(0), math::Vec3d(1)));
 	auto sphereLeft = std::make_shared<Dielectric>(1.5);
 	auto metalRight = std::make_shared<Metal>(math::Vec3d(0.8, 0.6, 0.2), 1);
 
