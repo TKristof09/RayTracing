@@ -64,30 +64,13 @@ std::string GetCurrentFilename(const std::string& base, const std::string& ext)
 	return base + std::to_string(i) + ext;
 
 }
-int main()
+HittableList RandomScene()
 {
-	const uint32_t numSamples = 100;
-	const int maxDepth = 50;
-	const double aspectRatio = 3.0 / 2.0;
-
-	math::Vec3d camPos = math::Vec3d(13, 2, 3);
-	math::Vec3d lookAt = math::Vec3d(0, 0, 0);
-	double focusDist = 10;
-	double aperture = 0.0;
-
-	const uint32_t imageWidth = 600;
-	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
-
-
-	// Camera
-	Camera cam(camPos, lookAt, math::Vec3d(0, 1, 0), 20.0, aspectRatio, aperture, focusDist);
-
 	// Materials
 	auto sphereMat = std::make_shared<Lambertian>(math::Vec3d(0.8, 0, 0.2));
 	auto groundMat = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(math::Vec3d(0), math::Vec3d(1)));
 	auto sphereLeft = std::make_shared<Dielectric>(1.5);
 	auto metalRight = std::make_shared<Metal>(math::Vec3d(0.8, 0.6, 0.2), 1);
-
 	// world
 	HittableList world;
 
@@ -139,6 +122,63 @@ int main()
 	objects.Add(std::make_shared<BVHNode>(worldBVH));
 	objects.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
 
+	return objects;
+
+}
+
+HittableList Earth()
+{
+	auto texture = std::make_shared<ImageTexture>("earthmap.jpg");
+	auto mat = std::make_shared<Lambertian>(texture);
+	auto globe = std::make_shared<Sphere>(math::Vec3d(0), 2, mat);
+
+	HittableList objects;
+	objects.Add(globe);
+	return objects;
+}
+
+int main()
+{
+	// Scene
+	HittableList world;
+	math::Vec3d camPos;
+	math::Vec3d lookAt;
+	double vFOV;
+	double focusDist;
+	double aperture;
+
+	switch(2)
+	{
+		case 1:
+			world = RandomScene();
+			camPos = math::Vec3d(13, 2, 3);
+			lookAt = math::Vec3d(0, 0, 0);
+			vFOV = 20;
+			focusDist = 10;
+			aperture = 0.0;
+			break;
+		case 2:
+			world = Earth();
+			camPos = math::Vec3d(13, 2, 3);
+			lookAt = math::Vec3d(0, 0, 0);
+			vFOV = 20;
+			focusDist = 10;
+			aperture = 0.0;
+
+	}
+	const uint32_t numSamples = 100;
+	const int maxDepth = 50;
+	const double aspectRatio = 3.0 / 2.0;
+
+
+	const uint32_t imageWidth = 600;
+	const uint32_t imageHeight = static_cast<uint32_t>(imageWidth / aspectRatio);
+
+
+	// Camera
+	Camera cam(camPos, lookAt, math::Vec3d(0, 1, 0), vFOV, aspectRatio, aperture, focusDist);
+
+
 	std::vector<uint8_t> imageData(imageWidth * imageHeight * 3);
 	int index = 0;
 	for(int i = imageHeight - 1; i >= 0; --i)
@@ -153,7 +193,7 @@ int main()
 				double u = (j + math::RandomReal<double>()) / (imageWidth - 1);
 				double v = (i + math::RandomReal<double>()) / (imageHeight - 1);
 
-				color += RayColor(cam.GetRay(u,v), objects, maxDepth);
+				color += RayColor(cam.GetRay(u,v), world, maxDepth);
 
 			}
 			double r = color.r;

@@ -3,6 +3,9 @@
 
 #include "3DMath/3DMath.h"
 #include <memory>
+#include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 class Texture
 {
@@ -49,5 +52,49 @@ public:
 private:
 	std::shared_ptr<Texture> m_odd;
 	std::shared_ptr<Texture> m_even;
+};
+
+
+class ImageTexture : public Texture
+{
+public:
+	ImageTexture() {}
+	ImageTexture(const std::string& filename):
+		m_channels(3)
+	{
+		m_data = stbi_load(filename.c_str(), &m_width, &m_height, &m_channels, m_channels);
+		if(!m_data)
+		{
+			std::cerr << "ERROR: Couldn't load texture image: " << filename << std::endl;
+			m_width = m_height = 0;
+		}
+	}
+	virtual math::Vec3d Sample(const math::Vec2d& uv, const math::Vec3d& point) const override
+	{
+		if(m_data == nullptr || m_width == 0 || m_height == 0)
+			return math::Vec3d(1, 0, 1); // cyan
+
+		// coords in [0, width] x [0, height]
+		int x = static_cast<int>(math::clamp(uv.x, 0.0, 1.0) * m_width);;
+		int y = static_cast<int>((1 - math::clamp(uv.y, 0.0, 1.0)) * m_height);; // flip
+
+		if(x >= m_width)
+			x = m_width - 1;
+		if(y >= m_height)
+			y = m_height - 1;
+
+		double colorScale = 1.0 / 255.0;
+
+		auto pixel = m_data + y * m_width * m_channels + x * m_channels;
+		return math::Vec3d(colorScale * pixel[0], colorScale * pixel[1], colorScale * pixel[2]);
+
+
+
+
+	}
+private:
+	unsigned char* m_data;
+	int m_width, m_height;
+	int m_channels;
 };
 #endif

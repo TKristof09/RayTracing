@@ -22,7 +22,7 @@ private:
 	static math::Vec2d GetUV(const math::Vec3d& point)
 	{
 		double theta = acos(-point.y);
-		double phi = atan2(-point.z, point.x + MATH_PI);
+		double phi = atan2(-point.z, point.x) + MATH_PI;
 
 		return math::Vec2d(phi / (2 * MATH_PI), theta / MATH_PI);
 	}
