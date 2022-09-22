@@ -50,7 +50,7 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
 	}
 
 	outRecord.t = root;
-	outRecord.point = r.At(root);
+	outRecord.point = r.At(outRecord.t);
 	math::Vec3d normal = (outRecord.point - m_center) / m_radius;
 	outRecord.SetNormal(r, normal);
 	outRecord.material = m_material;

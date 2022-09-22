@@ -28,6 +28,8 @@ public:
 		m_texture(t) {}
 	virtual bool Scatter(const Ray& r, const HitRecord& rec, math::Vec3d& outAttenuation, Ray& outRay) const override
 	{
+		//math::Vec3d v = math::RandomOnUnitSphere<double>();
+		//auto scatterDir = (math::dot(v, rec.normal) > 0.0 ? v : -v);
 		auto scatterDir = rec.normal + math::RandomOnUnitSphere<double>();
 		if(math::NearZero(scatterDir))
 			scatterDir = rec.normal;
@@ -117,7 +119,7 @@ public:
 		return false;
 	}
 
-	virtual math::Vec3d Emitted(const math::Vec2d& uv, const math::Vec3d& point)
+	virtual math::Vec3d Emitted(const math::Vec2d& uv, const math::Vec3d& point) override
 	{
 		return m_emissionTexture->Sample(uv, point);
 	}

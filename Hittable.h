@@ -22,7 +22,7 @@ struct HitRecord
 	inline void SetNormal(const Ray& r, const math::Vec3d& outwardNormal)
 	{
 		frontFace = math::dot(r.GetDir(), outwardNormal) < 0;
-		normal = frontFace ? outwardNormal : -outwardNormal;
+		normal = math::normalize(frontFace ? outwardNormal : -outwardNormal);
 	}
 };
 

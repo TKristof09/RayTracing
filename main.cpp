@@ -15,6 +15,7 @@
 #include "Material.h"
 #include "BVH.h"
 #include "Texture.h"
+#include "AARect.h"
 
 
 math::Vec3d RayColor(const Ray& r, const math::Vec3d& background, const Hittable& world, int depth)
@@ -52,7 +53,7 @@ math::Vec3d RayColor(const Ray& r, const math::Vec3d& background, const Hittable
 
 std::string GetCurrentFilename(const std::string& base, const std::string& ext)
 {
-	std::filesystem::path p = std::filesystem::current_path();
+	std::filesystem::path p = std::filesystem::current_path() / "images";
 
 	int i = 0;
 	for(const auto& entry : std::filesystem::directory_iterator(p))
@@ -61,7 +62,7 @@ std::string GetCurrentFilename(const std::string& base, const std::string& ext)
 			i++;
 	}
 
-	return base + std::to_string(i) + ext;
+	return "images/" + base + std::to_string(i) + ext;
 
 }
 HittableList RandomScene()
@@ -138,17 +139,17 @@ HittableList Earth()
 }
 HittableList EmissionScene()
 {
-	auto mat1 = std::make_shared<Lambertian>(math::Vec3d(1, 0, 0));
-	auto sphere1 = std::make_shared<Sphere>(math::Vec3d(0, 1, 0), 1, mat1);
+	auto mat1 = std::make_shared<Lambertian>(math::Vec3d(1, 1, 1));
+	auto mat2 = std::make_shared<Emissive>(4.0 * math::Vec3d(1, 1, 1));
 
-	auto mat2 = std::make_shared<Emissive>(15.0 * math::Vec3d(1, 1, 1));
-	auto sphere2 = std::make_shared<Sphere>(math::Vec3d(3, 2, 1), 1, mat2);
+	auto sphere1 = std::make_shared<Sphere>(math::Vec3d(0, 2, 0), 2.0, mat1);
+	auto light = std::make_shared<XY_Rect>(math::Vec2d(3, 1), math::Vec3d(5, 3), -2, mat2);
 
 	HittableList objects;
-	objects.Add(sphere1);
-	objects.Add(sphere2);
+	//objects.Add(sphere1);
+	objects.Add(light);
 
-	auto groundMat = std::make_shared<Lambertian>(std::make_shared<CheckerTexture>(math::Vec3d(0), math::Vec3d(1)));
+	auto groundMat = std::make_shared<Lambertian>(std::make_shared<SolidColor>(math::Vec3d(1, 1, 0)));
 	objects.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
 	return objects;
 }
@@ -185,12 +186,12 @@ int main()
 			break;
 		case 3:
 			world = EmissionScene();
-			camPos = math::Vec3d(0, 2, 13);
-			lookAt = math::Vec3d(0, 0, 0);
+			camPos = math::Vec3d(26, 3, 6);
+			lookAt = math::Vec3d(0, 2, 0);
 			vFOV = 20;
 			focusDist = 10;
 			aperture = 0.0;
-			background = math::Vec3d(0.1);
+			background = math::Vec3d(0.01);
 			break;
 
 	}
