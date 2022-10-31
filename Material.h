@@ -33,7 +33,9 @@ public:
 		auto scatterDir = rec.normal + math::RandomOnUnitSphere<double>();
 		if(math::NearZero(scatterDir))
 			scatterDir = rec.normal;
-		outRay = Ray(rec.point, scatterDir);
+		//if(!(scatterDir[0] > 0 && scatterDir[1] > 0 && scatterDir[2] > 0))
+		//	std::cout << "now" << std::endl;
+		outRay = Ray(rec.point + rec.normal * 0.0001, scatterDir);
 		outAttenuation = m_texture->Sample(rec.uv, rec.point);
 
 		return true;

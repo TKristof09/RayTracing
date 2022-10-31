@@ -39,12 +39,12 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
 
 	if(delta < 0.0)
 		return false;
-	double sqDelta = sqrt(delta);
-	double root = (-half_b - sqDelta) / a;
+	double sqrtDelta = sqrt(delta);
+	double root = (-half_b - sqrtDelta) / a;
 
 	if(root < tMin || root > tMax)
 	{
-		root = (-half_b + sqDelta) / a;
+		root = (-half_b + sqrtDelta) / a;
 		if(root < tMin || root > tMax)
 			return false;
 	}

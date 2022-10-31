@@ -8,8 +8,10 @@ class Ray
 public:
 	Ray() {};
 	Ray(const math::Vec3d& origin, const math::Vec3d& dir):
-		m_origin(origin), m_dir(dir), m_invDir(1.0 / dir)
+		m_origin(origin), m_dir(math::normalize(dir))
 	{
+		m_invDir = 1.0 / m_dir;
+
 		m_signs[0] = m_invDir.x < 0;
 		m_signs[1] = m_invDir.y < 0;
 		m_signs[2] = m_invDir.z < 0;

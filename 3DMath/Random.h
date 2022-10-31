@@ -10,10 +10,17 @@ namespace math
 	T RandomReal(T min = T(0.0), T max = T(1.0))
 	{
 		static std::uniform_real_distribution<T> distribution(min, max);
-		static std::mt19937 generator;
-		return distribution(generator);
+		static std::mt19937_64 generator;
+		return T(distribution(generator));
 	}
 
+	template<typename T>
+	T RandomNormalReal()
+	{
+		static std::normal_distribution<T> distribution;
+		static std::mt19937_64 generator;
+		return T(distribution(generator));
+	}
 	int RandomInt(int min = 0, int max = 1)
 	{
 		static std::uniform_int_distribution<int> distribution(min, max);
@@ -25,21 +32,16 @@ namespace math
 	template<typename T>
 	vec<3,T> RandomInUnitSphere()
 	{
-		while(true)
-		{
-			vec<3,T> res(RandomReal<T>(), RandomReal<T>(),RandomReal<T>());
-			if(math::lengthSq(res) >= T(1))
-				continue;
-			else
-				return res;
-		}
+		vec<3,T> res(RandomNormalReal<T>(),RandomNormalReal<T>(),RandomNormalReal<T>());
+		T r = RandomReal<T>();
+		return math::normalize(res) * pow(r, 1.0/3.0);
 	}
 	template<typename T>
 	vec<2,T> RandomInUnitDisk()
 	{
 		while(true)
 		{
-			vec<2,T> res(RandomReal<T>(), RandomReal<T>());
+			vec<2,T> res(RandomNormalReal<T>(),RandomNormalReal<T>());
 			if(math::lengthSq(res) >= T(1))
 				continue;
 			else
@@ -49,7 +51,8 @@ namespace math
 	template<typename T>
 	vec<3,T> RandomOnUnitSphere()
 	{
-		return math::normalize(RandomInUnitSphere<T>());
+		vec<3,T> res(RandomNormalReal<T>(),RandomNormalReal<T>(),RandomNormalReal<T>());
+		return math::normalize(res);
 	}
 
 

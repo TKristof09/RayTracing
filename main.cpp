@@ -139,18 +139,20 @@ HittableList Earth()
 }
 HittableList EmissionScene()
 {
-	auto mat1 = std::make_shared<Lambertian>(math::Vec3d(1, 1, 1));
+	auto texture = std::make_shared<ImageTexture>("earthmap.jpg");
+	auto mat1 = std::make_shared<Lambertian>(texture);
 	auto mat2 = std::make_shared<Emissive>(4.0 * math::Vec3d(1, 1, 1));
 
 	auto sphere1 = std::make_shared<Sphere>(math::Vec3d(0, 2, 0), 2.0, mat1);
 	auto light = std::make_shared<XY_Rect>(math::Vec2d(3, 1), math::Vec3d(5, 3), -2, mat2);
 
 	HittableList objects;
-	//objects.Add(sphere1);
+	objects.Add(sphere1);
 	objects.Add(light);
 
 	auto groundMat = std::make_shared<Lambertian>(std::make_shared<SolidColor>(math::Vec3d(1, 1, 0)));
 	objects.Add(std::make_shared<Sphere>(math::Vec3d(0,-1000,0), 1000, groundMat)); // "ground"
+	//objects.Add(std::make_shared<XY_Rect>(math::Vec2d(-10,-10), math::Vec3d(10, 10), -5, groundMat));
 	return objects;
 }
 int main()
@@ -177,7 +179,7 @@ int main()
 			break;
 		case 2:
 			world = Earth();
-			camPos = math::Vec3d(13, 2, 2);
+			camPos = math::Vec3d(0, 2, 20);
 			lookAt = math::Vec3d(0, 0, 0);
 			vFOV = 20;
 			focusDist = 10;
