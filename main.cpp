@@ -155,6 +155,24 @@ HittableList EmissionScene()
 	//objects.Add(std::make_shared<XY_Rect>(math::Vec2d(-10,-10), math::Vec3d(10, 10), -5, groundMat));
 	return objects;
 }
+HittableList CornellBox()
+{
+	HittableList objects;
+
+    auto red   = std::make_shared<Lambertian>(math::Vec3d(.65, .05, .05));
+    auto white = std::make_shared<Lambertian>(math::Vec3d(.73, .73, .73));
+    auto green = std::make_shared<Lambertian>(math::Vec3d(.12, .45, .15));
+    auto light = std::make_shared<Emissive>(15.0 * math::Vec3d(1));
+
+    objects.Add(std::make_shared<YZ_Rect>(math::Vec2d(0,0), math::Vec2d(555,555), 555, green));
+    objects.Add(std::make_shared<YZ_Rect>(math::Vec2d(0,0), math::Vec2d(555,555), 0, red));
+    objects.Add(std::make_shared<XZ_Rect>(math::Vec2d(213, 227), math::Vec2d(343, 332), 554, light));
+    objects.Add(std::make_shared<XZ_Rect>(math::Vec2d(0,0), math::Vec2d(555,555), 0, white));
+    objects.Add(std::make_shared<XZ_Rect>(math::Vec2d(0,0), math::Vec2d(555,555), 555, white));
+    objects.Add(std::make_shared<XY_Rect>(math::Vec2d(0,0), math::Vec2d(555,555), 555, white));
+
+	return objects;
+}
 int main()
 {
 	// Scene
@@ -166,7 +184,7 @@ int main()
 	double aperture;
 	math::Vec3d background;
 
-	switch(3)
+	switch(4)
 	{
 		case 1:
 			world = RandomScene();
@@ -194,6 +212,15 @@ int main()
 			focusDist = 10;
 			aperture = 0.0;
 			background = math::Vec3d(0.01);
+			break;
+		case 4:
+			world = CornellBox();
+			camPos = math::Vec3d(278,278,-800);
+			lookAt = math::Vec3d(278,278,0);
+			vFOV = 40;
+			focusDist = 10;
+			aperture = 0.0;
+			background = math::Vec3d(0.00);
 			break;
 
 	}
