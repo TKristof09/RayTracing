@@ -73,7 +73,7 @@ std::string GetCurrentFilename(const std::string& base,
     return (p / (base + std::to_string(i) + "_" + std::to_string(numSamples) + ext)).string();
 }
 
-void SaveImage(std::vector<uint32_t>& pixels, int width, int height, int numSamples)
+void SaveImage(std::vector<uint8_t>& pixels, int width, int height, int numSamples)
 {
     std::string filename = GetCurrentFilename("image", ".png", numSamples);
     stbi_write_png(filename.c_str(), width, height, 4, pixels.data(),
@@ -266,6 +266,8 @@ int main()
                focusDist);
 
     std::vector<uint32_t> imageData(imageWidth * imageHeight);
+    // stb expects the bytes to be in the other order as minifb, so need to keep a separate buffer
+    std::vector<uint8_t> stbImageData(imageWidth * imageHeight * 4);
     std::vector<glm::vec3> accumulatedColor(imageWidth * imageHeight, glm::vec3(0));
     int index = 0;
 
@@ -291,7 +293,7 @@ int main()
                                         mfb_close(window);
                                     if(key == KB_KEY_S && isPressed)
                                     {
-                                        SaveImage(imageData, imageWidth, imageHeight, frameIndex * numSamples);
+                                        SaveImage(stbImageData, imageWidth, imageHeight, frameIndex * numSamples);
                                     } },
                               window);
 
@@ -301,7 +303,7 @@ int main()
         frameIndex++;
         mfb_timer_now(timer);
         std::for_each(std::execution::par, lines.begin(), lines.end(),
-                      [=, &imageData, &accumulatedColor](int y)
+                      [=, &imageData, &accumulatedColor, &stbImageData](int y)
                       {
                           for(int x = 0; x < imageWidth; ++x)
                           {
@@ -336,7 +338,11 @@ int main()
                               uint8_t image_g = 256 * glm::clamp(pixel.g / frameIndex, 0.0f, 0.999f);
                               uint8_t image_b = 256 * glm::clamp(pixel.b / frameIndex, 0.0f, 0.999f);
 
-                              imageData[y * imageWidth + x] = 0xFF000000 | (image_r << 16) | (image_g << 8) | image_b;
+                              imageData[y * imageWidth + x]              = MFB_ARGB(0xFF, image_r, image_g, image_b);
+                              stbImageData[(y * imageWidth + x) * 4 + 0] = image_r;
+                              stbImageData[(y * imageWidth + x) * 4 + 1] = image_g;
+                              stbImageData[(y * imageWidth + x) * 4 + 2] = image_b;
+                              stbImageData[(y * imageWidth + x) * 4 + 3] = 0xFF;
 
                               // WriteColor(std::cout, color, numSamples);
                           }
@@ -351,5 +357,5 @@ int main()
             break;
         }
     } while(mfb_wait_sync(window));
-    SaveImage(imageData, imageWidth, imageHeight, frameIndex * numSamples);
+    SaveImage(stbImageData, imageWidth, imageHeight, frameIndex * numSamples);
 }
