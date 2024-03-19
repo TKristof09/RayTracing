@@ -35,3 +35,5 @@
 *.ilk
 *.pdb
 .vs
+.cache
+build

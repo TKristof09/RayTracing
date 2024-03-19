@@ -1,0 +1,6 @@
+[submodule "minifb"]
+	path = minifb
+	url = git@github.com:emoon/minifb.git
+[submodule "glm"]
+	path = glm
+	url = git@github.com:g-truc/glm.git
