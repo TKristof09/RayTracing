@@ -11,8 +11,8 @@ class BVHNode : public Hittable
 {
 public:
     BVHNode();
-    BVHNode(HittableList& list, LinearAllocator& allocator) : BVHNode(list.GetObjects(), 0, list.GetObjects().size(), allocator) {}
-    BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end, LinearAllocator& allocator);
+    BVHNode(HittableList& list) : BVHNode(list.GetObjects(), 0, list.GetObjects().size()) {}
+    BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end);
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override;
     virtual bool BoundingBox(AABB& outAABB) const override
@@ -27,7 +27,7 @@ private:
     AABB m_aabb;
 };
 
-bool BVHNode::Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const
+inline bool BVHNode::Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const
 {
     if(!m_aabb.Hit(r, tMin, tMax))
         return false;
@@ -38,7 +38,7 @@ bool BVHNode::Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) co
     return hitLeft || hitRight;
 }
 
-BVHNode::BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end, LinearAllocator& allocator)
+inline BVHNode::BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end)
 {
     auto objectsModif = objects;  // create a modifiable vector
 
@@ -74,8 +74,8 @@ BVHNode::BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end, Line
         std::sort(objects.begin() + start, objects.begin() + end, comp);
 
         size_t mid = start + numObjects / 2;
-        m_left     = allocator.Allocate<BVHNode>(objects, start, mid, allocator);
-        m_right    = allocator.Allocate<BVHNode>(objects, mid, end, allocator);
+        m_left     = g_shapeAllocator.Allocate<BVHNode>(objects, start, mid);
+        m_right    = g_shapeAllocator.Allocate<BVHNode>(objects, mid, end);
     }
 
     AABB leftBox, rightBox;

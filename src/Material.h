@@ -125,4 +125,21 @@ public:
 private:
     Texture* m_emissionTexture;
 };
+
+class Isotropic : public Material
+{
+public:
+    Isotropic(const glm::vec3& color) : m_texture(g_materialAllocator.Allocate<SolidColor>(color)) {}
+    Isotropic(Texture* t) : m_texture(t) {}
+    virtual bool Scatter(const Ray& r, const HitRecord& rec, glm::vec3& outAttenuation, Ray& outRay) const override
+    {
+        outRay         = Ray(rec.point, math::RandomOnUnitSphere<float>());
+        outAttenuation = m_texture->Sample(rec.uv, rec.point);
+        return true;
+    }
+
+private:
+    Texture* m_texture;
+};
+
 #endif
