@@ -1,3 +1,4 @@
+#include "Box.hpp"
 #define GLM_FORCE_MESSAGES
 #define GLM_ENABLE_EXPERIMENTAL
 // #define GLM_FORCE_SIMD_AVX2
@@ -204,10 +205,12 @@ HittableList CornellBox()
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(343, 554, 332), glm::vec3(-130, 0, 0), glm::vec3(0, 0, -105), light));
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), white));
 
-    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 400), 90.f,
-                                                  g_materialAllocator.Allocate<Dielectric>(1.5f)));
-    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 300), 85.f,
-                                                  g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.1f)));
+    objects.Add(g_shapeAllocator.Allocate<Box>(glm::vec3(130, 0, 65), glm::vec3(295, 165, 230), white));
+    objects.Add(g_shapeAllocator.Allocate<Box>(glm::vec3(265, 0, 295), glm::vec3(430, 330, 460), white));
+    // objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 400), 90.f,
+    //                                               g_materialAllocator.Allocate<Dielectric>(1.5f)));
+    // objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 300), 85.f,
+    //                                               g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.1f)));
 
     return objects;
 }
@@ -232,7 +235,7 @@ int main()
     float aperture;
     glm::vec3 background;
 
-    switch(3)
+    switch(4)
     {
     case 1:
         world      = RandomScene();
