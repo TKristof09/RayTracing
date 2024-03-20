@@ -5,6 +5,8 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define STB_PERLIN_IMPLEMENTATION
+#include "stb_perlin.h"
 #include "glm/glm.hpp"
 #include "Allocator.hpp"
 
@@ -92,5 +94,18 @@ private:
     unsigned char* m_data;
     int m_width, m_height;
     int m_channels;
+};
+
+class PerlinNoise : public Texture
+{
+public:
+    PerlinNoise(int octaves) : m_octaves(octaves) {}
+    virtual glm::vec3 Sample(const glm::vec2& uv, const glm::vec3& point) const override
+    {
+        return glm::vec3(1, 1, 1) * 0.5f * (1 + stb_perlin_fbm_noise3(point.x, point.y, point.z, 2.f, 0.5f, m_octaves));
+    }
+
+private:
+    int m_octaves;
 };
 #endif

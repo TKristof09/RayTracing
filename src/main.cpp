@@ -14,7 +14,7 @@
 #include "stb_image_write.h"
 
 #include "3DMath/Random.h"
-#include "AARect.h"
+#include "Quad.hpp"
 #include "BVH.h"
 #include "Camera.h"
 #include "HittableList.h"
@@ -38,7 +38,7 @@ glm::vec3 RayColor(const Ray& r, const glm::vec3& background,
         return glm::vec3(0);
     HitRecord rec;
 
-    if(world.Hit(r, 0.001f, std::numeric_limits<float>::infinity(), rec))
+    if(world.Hit(r, 0.001f, std::numeric_limits<float>::infinity(), rec)) [[likely]]
     {
         // Hemispherical scattering
         // glm::vec3 v = math::RandomInUnitSphere<float>();
@@ -52,7 +52,7 @@ glm::vec3 RayColor(const Ray& r, const glm::vec3& background,
         Ray scattered;
         glm::vec3 attenuation;
         glm::vec3 emitted = rec.material->Emitted(rec.uv, rec.point);
-        if(rec.material->Scatter(r, rec, attenuation, scattered))
+        if(rec.material->Scatter(r, rec, attenuation, scattered)) [[likely]]
             return emitted + attenuation * RayColor(scattered, background, world, depth - 1);
         else
             return emitted;
@@ -159,7 +159,7 @@ HittableList RandomScene()
 
 HittableList Earth()
 {
-    auto* texture = g_materialAllocator.Allocate<ImageTexture>("earthmap.jpg");
+    auto* texture = g_materialAllocator.Allocate<ImageTexture>("../earthmap.jpg");
     auto* mat     = g_materialAllocator.Allocate<Lambertian>(texture);
     auto* globe   = g_shapeAllocator.Allocate<Sphere>(glm::vec3(0), 2.f, mat);
 
@@ -174,7 +174,7 @@ HittableList EmissionScene()
     auto* mat2    = g_materialAllocator.Allocate<Emissive>(4.0f * glm::vec3(1, 1, 1));
 
     auto* sphere1 = g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, 2, 0), 2.0f, mat1);
-    auto* light   = g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(3, 1), glm::vec2(5, 3), -2.f, mat2);
+    auto* light   = g_shapeAllocator.Allocate<Quad>(glm::vec3(3, 1, -2), glm::vec3(2, 0, 0), glm::vec3(0, 2, 0), mat2);
 
     HittableList objects;
     objects.Add(sphere1);
@@ -184,7 +184,6 @@ HittableList EmissionScene()
         g_shapeAllocator.Allocate<SolidColor>(glm::vec3(1, 1, 0)));
     objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, -1000, 0), 1000.f,
                                                   groundMat));  // "ground"
-    // objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(-10,-10), glm::vec3(10,
     // 10), -5, groundMat));
     return objects;
 }
@@ -197,25 +196,29 @@ HittableList CornellBox()
     auto* green = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.12, .45, .15));
     auto* light = g_materialAllocator.Allocate<Emissive>(150.0f * glm::vec3(1));
 
-    objects.Add(g_shapeAllocator.Allocate<YZ_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 555.f, green));
-    objects.Add(g_shapeAllocator.Allocate<YZ_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 0.f, red));
-    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(213, 227),
-                                                   glm::vec2(343, 332), 554.f, light));
-    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 0.f, white));
-    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 555.f, white));
-    objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 555.f, white));
-    objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(0, 0),
-                                                   glm::vec2(555, 555), 0.f, white));
-    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 200), 90.f,
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), glm::vec3(0, 0, 555), green));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(0, 555, 0), glm::vec3(0, 0, 555), red));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(555, 0, 0), glm::vec3(0, 0, 555), white));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(555, 555, 555), glm::vec3(-555, 0, 0), glm::vec3(0, 0, -555), white));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 555), glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), white));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(343, 554, 332), glm::vec3(-130, 0, 0), glm::vec3(0, 0, -105), light));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), white));
+
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 400), 90.f,
                                                   g_materialAllocator.Allocate<Dielectric>(1.5f)));
-    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 200), 85.f,
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 300), 85.f,
                                                   g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.1f)));
 
+    return objects;
+}
+HittableList Perlin()
+{
+    auto* texture = g_materialAllocator.Allocate<PerlinNoise>(6);
+    auto* mat     = g_materialAllocator.Allocate<Lambertian>(texture);
+    auto* globe   = g_shapeAllocator.Allocate<Sphere>(glm::vec3(0), 2.f, mat);
+
+    HittableList objects;
+    objects.Add(globe);
     return objects;
 }
 int main()
@@ -229,7 +232,7 @@ int main()
     float aperture;
     glm::vec3 background;
 
-    switch(1)
+    switch(3)
     {
     case 1:
         world      = RandomScene();
@@ -267,11 +270,19 @@ int main()
         aperture   = 0.0f;
         background = glm::vec3(0.00f);
         break;
+    case 5:
+        world      = Perlin();
+        camPos     = glm::vec3(0, 2, 20);
+        lookAt     = glm::vec3(0, 0, 0);
+        vFOV       = 20.f;
+        focusDist  = 10.f;
+        aperture   = 0.0f;
+        background = glm::vec3(0.7f, 0.8f, 1.0f);
+        break;
     }
     constexpr uint32_t numSamples = 1;
     constexpr int maxDepth        = 5;
-    constexpr float aspectRatio   = 1.5f;
-    16.0f / 9.0f;
+    constexpr float aspectRatio   = 16.0f / 9.0f;
 
     constexpr uint32_t imageHeight = 600;
     constexpr uint32_t imageWidth  = static_cast<uint32_t>(imageHeight * aspectRatio);

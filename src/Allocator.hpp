@@ -1,6 +1,6 @@
 #pragma once
 #include <utility>
-
+#include <iostream>
 
 class LinearAllocator
 {
@@ -21,7 +21,8 @@ public:
     {
         if((size_t)m_ptr + sizeof(T) > (size_t)m_start + m_size)
         {
-            assert(false && "LinearAllocator out of memory");
+            std::cout << "LinearAllocator out of memory" << std::endl;
+            assert(false);
             return nullptr;
         }
 
