@@ -22,6 +22,14 @@
 #include "Ray.h"
 #include "Sphere.h"
 #include "Texture.h"
+#include "Allocator.hpp"
+
+
+#define SHAPE_ALLOCATOR_SIZE    1024 * 128
+#define MATERIAL_ALLOCATOR_SIZE 1024 * 1024
+LinearAllocator g_shapeAllocator(SHAPE_ALLOCATOR_SIZE);
+LinearAllocator g_materialAllocator(MATERIAL_ALLOCATOR_SIZE);
+
 
 glm::vec3 RayColor(const Ray& r, const glm::vec3& background,
                    const Hittable& world, int depth)
@@ -85,15 +93,15 @@ void SaveImage(std::vector<uint8_t>& pixels, int width, int height, int numSampl
 HittableList RandomScene()
 {
     // Materials
-    auto sphereMat = std::make_shared<Lambertian>(glm::vec3(0.8f, 0.f, 0.2f));
-    auto groundMat = std::make_shared<Lambertian>(
-        std::make_shared<CheckerTexture>(glm::vec3(0.f), glm::vec3(1.f)));
-    auto sphereLeft = std::make_shared<Dielectric>(1.5f);
-    auto metalRight = std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 1.f);
+    auto* sphereMat = g_materialAllocator.Allocate<Lambertian>(glm::vec3(0.8f, 0.f, 0.2f));
+    auto* groundMat = g_materialAllocator.Allocate<Lambertian>(
+        g_shapeAllocator.Allocate<CheckerTexture>(glm::vec3(0.f), glm::vec3(1.f)));
+    auto* sphereLeft = g_materialAllocator.Allocate<Dielectric>(1.5f);
+    auto* metalRight = g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 1.f);
     // world
     HittableList world;
 
-    constexpr int gridSize = 15;
+    constexpr int gridSize = 11;
     for(int a = -gridSize; a < gridSize; a++)
     {
         for(int b = -gridSize; b < gridSize; b++)
@@ -103,12 +111,12 @@ HittableList RandomScene()
                              b + 0.9f * math::RandomReal<float>());
             if(glm::length2(center - glm::vec3(4.f, 0.2f, 0.f)) > 0.9f * 0.9f)
             {
-                std::shared_ptr<Material> mat;
+                Material* mat;
                 if(matChoice < 0.6f)
                 {
                     // diffuse
                     auto albedo = math::RandomInUnitSphere<float>() * math::RandomInUnitSphere<float>();  // random color
-                    mat         = std::make_shared<Lambertian>(albedo);
+                    mat         = g_materialAllocator.Allocate<Lambertian>(albedo);
                 }
                 else if(matChoice < 0.85f)
                 {
@@ -117,43 +125,43 @@ HittableList RandomScene()
                                             math::RandomReal<float>(0.5f, 1.0f),
                                             math::RandomReal<float>(0.5f, 1.0f));
                     auto fuzz   = math::RandomReal<float>(0.f, 0.5f);
-                    mat         = std::make_shared<Metal>(albedo, fuzz);
+                    mat         = g_materialAllocator.Allocate<Metal>(albedo, fuzz);
                 }
                 else
                 {
                     // glass
-                    mat = std::make_shared<Dielectric>(1.5f);
+                    mat = g_materialAllocator.Allocate<Dielectric>(1.5f);
                 }
-                world.Add(std::make_shared<Sphere>(center, 0.2f, mat));
+                world.Add(g_shapeAllocator.Allocate<Sphere>(center, 0.2f, mat));
             }
         }
     }
-    auto mat1 = std::make_shared<Dielectric>(1.5f);
-    world.Add(std::make_shared<Sphere>(glm::vec3(0, 1, 0), 1.f, mat1));
+    auto* mat1 = g_materialAllocator.Allocate<Dielectric>(1.5f);
+    world.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, 1, 0), 1.f, mat1));
 
-    auto mat2 = std::make_shared<Lambertian>(glm::vec3(0.4f, 0.2f, 0.1f));
-    world.Add(std::make_shared<Sphere>(glm::vec3(-4, 1, 0), 1.f, mat2));
+    auto* mat2 = g_materialAllocator.Allocate<Lambertian>(glm::vec3(0.4f, 0.2f, 0.1f));
+    world.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(-4, 1, 0), 1.f, mat2));
 
-    auto mat3 = std::make_shared<Metal>(glm::vec3(0.7f, 0.6f, 0.5f), 0.f);
-    world.Add(std::make_shared<Sphere>(glm::vec3(4, 1, 0), 1.f, mat3));
+    auto* mat3 = g_materialAllocator.Allocate<Metal>(glm::vec3(0.7f, 0.6f, 0.5f), 0.f);
+    world.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(4, 1, 0), 1.f, mat3));
     // Render into a PPM image
     //
 
-    BVHNode worldBVH(world);
+    BVHNode worldBVH(world, g_shapeAllocator);
 
     HittableList objects;
-    objects.Add(std::make_shared<BVHNode>(worldBVH));
-    objects.Add(std::make_shared<Sphere>(glm::vec3(0, -1000, 0), 1000.f,
-                                         groundMat));  // "ground"
+    objects.Add(g_shapeAllocator.Allocate<BVHNode>(worldBVH));
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, -1000, 0), 1000.f,
+                                                  groundMat));  // "ground"
 
     return objects;
 }
 
 HittableList Earth()
 {
-    auto texture = std::make_shared<ImageTexture>("earthmap.jpg");
-    auto mat     = std::make_shared<Lambertian>(texture);
-    auto globe   = std::make_shared<Sphere>(glm::vec3(0), 2.f, mat);
+    auto* texture = g_materialAllocator.Allocate<ImageTexture>("earthmap.jpg");
+    auto* mat     = g_materialAllocator.Allocate<Lambertian>(texture);
+    auto* globe   = g_shapeAllocator.Allocate<Sphere>(glm::vec3(0), 2.f, mat);
 
     HittableList objects;
     objects.Add(globe);
@@ -161,22 +169,22 @@ HittableList Earth()
 }
 HittableList EmissionScene()
 {
-    auto texture = std::make_shared<ImageTexture>("earthmap.jpg");
-    auto mat1    = std::make_shared<Lambertian>(texture);
-    auto mat2    = std::make_shared<Emissive>(4.0f * glm::vec3(1, 1, 1));
+    auto* texture = g_materialAllocator.Allocate<ImageTexture>("earthmap.jpg");
+    auto* mat1    = g_materialAllocator.Allocate<Lambertian>(texture);
+    auto* mat2    = g_materialAllocator.Allocate<Emissive>(4.0f * glm::vec3(1, 1, 1));
 
-    auto sphere1 = std::make_shared<Sphere>(glm::vec3(0, 2, 0), 2.0f, mat1);
-    auto light   = std::make_shared<XY_Rect>(glm::vec2(3, 1), glm::vec2(5, 3), -2.f, mat2);
+    auto* sphere1 = g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, 2, 0), 2.0f, mat1);
+    auto* light   = g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(3, 1), glm::vec2(5, 3), -2.f, mat2);
 
     HittableList objects;
     objects.Add(sphere1);
     objects.Add(light);
 
-    auto groundMat = std::make_shared<Lambertian>(
-        std::make_shared<SolidColor>(glm::vec3(1, 1, 0)));
-    objects.Add(std::make_shared<Sphere>(glm::vec3(0, -1000, 0), 1000.f,
-                                         groundMat));  // "ground"
-    // objects.Add(std::make_shared<XY_Rect>(glm::vec2(-10,-10), glm::vec3(10,
+    auto* groundMat = g_materialAllocator.Allocate<Lambertian>(
+        g_shapeAllocator.Allocate<SolidColor>(glm::vec3(1, 1, 0)));
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(0, -1000, 0), 1000.f,
+                                                  groundMat));  // "ground"
+    // objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(-10,-10), glm::vec3(10,
     // 10), -5, groundMat));
     return objects;
 }
@@ -184,23 +192,29 @@ HittableList CornellBox()
 {
     HittableList objects;
 
-    auto red   = std::make_shared<Lambertian>(glm::vec3(.65, .05, .05));
-    auto white = std::make_shared<Lambertian>(glm::vec3(.73, .73, .73));
-    auto green = std::make_shared<Lambertian>(glm::vec3(.12, .45, .15));
-    auto light = std::make_shared<Emissive>(15.0f * glm::vec3(1));
+    auto* red   = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.65, .05, .05));
+    auto* white = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.73, .73, .73));
+    auto* green = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.12, .45, .15));
+    auto* light = g_materialAllocator.Allocate<Emissive>(150.0f * glm::vec3(1));
 
-    objects.Add(std::make_shared<YZ_Rect>(glm::vec2(0, 0),
-                                          glm::vec2(555, 555), 555.f, green));
-    objects.Add(std::make_shared<YZ_Rect>(glm::vec2(0, 0),
-                                          glm::vec2(555, 555), 0.f, red));
-    objects.Add(std::make_shared<XZ_Rect>(glm::vec2(213, 227),
-                                          glm::vec2(343, 332), 554.f, light));
-    objects.Add(std::make_shared<XZ_Rect>(glm::vec2(0, 0),
-                                          glm::vec2(555, 555), 0.f, white));
-    objects.Add(std::make_shared<XZ_Rect>(glm::vec2(0, 0),
-                                          glm::vec2(555, 555), 555.f, white));
-    objects.Add(std::make_shared<XY_Rect>(glm::vec2(0, 0),
-                                          glm::vec2(555, 555), 555.f, white));
+    objects.Add(g_shapeAllocator.Allocate<YZ_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 555.f, green));
+    objects.Add(g_shapeAllocator.Allocate<YZ_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 0.f, red));
+    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(213, 227),
+                                                   glm::vec2(343, 332), 554.f, light));
+    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 0.f, white));
+    objects.Add(g_shapeAllocator.Allocate<XZ_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 555.f, white));
+    objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 555.f, white));
+    objects.Add(g_shapeAllocator.Allocate<XY_Rect>(glm::vec2(0, 0),
+                                                   glm::vec2(555, 555), 0.f, white));
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 200), 90.f,
+                                                  g_materialAllocator.Allocate<Dielectric>(1.5f)));
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 200), 85.f,
+                                                  g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.1f)));
 
     return objects;
 }
@@ -215,7 +229,7 @@ int main()
     float aperture;
     glm::vec3 background;
 
-    switch(4)
+    switch(1)
     {
     case 1:
         world      = RandomScene();
@@ -246,9 +260,9 @@ int main()
         break;
     case 4:
         world      = CornellBox();
-        camPos     = glm::vec3(278, 278, -800);
-        lookAt     = glm::vec3(278, 278, 0);
-        vFOV       = 40.f;
+        camPos     = glm::vec3(278, 278, 0.1);
+        lookAt     = glm::vec3(278, 278, 1);
+        vFOV       = 90.f;
         focusDist  = 10.f;
         aperture   = 0.0f;
         background = glm::vec3(0.00f);
@@ -256,9 +270,10 @@ int main()
     }
     constexpr uint32_t numSamples = 1;
     constexpr int maxDepth        = 5;
-    constexpr float aspectRatio   = 16.0f / 9.0f;
+    constexpr float aspectRatio   = 1.5f;
+    16.0f / 9.0f;
 
-    constexpr uint32_t imageHeight = 720;
+    constexpr uint32_t imageHeight = 600;
     constexpr uint32_t imageWidth  = static_cast<uint32_t>(imageHeight * aspectRatio);
 
     // Camera

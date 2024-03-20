@@ -9,7 +9,7 @@ class XY_Rect : public Hittable
 {
 public:
     XY_Rect() {}
-    XY_Rect(const glm::vec2& min, const glm::vec2& max, float z, std::shared_ptr<Material> mat) : m_min(min), m_max(max), m_z(z), m_material(mat) {}
+    XY_Rect(const glm::vec2& min, const glm::vec2& max, float z, Material* mat) : m_min(min), m_max(max), m_z(z), m_material(mat) {}
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override
     {
@@ -37,13 +37,13 @@ public:
 private:
     glm::vec2 m_min, m_max;
     float m_z;
-    std::shared_ptr<Material> m_material;
+    Material* m_material;
 };
 class XZ_Rect : public Hittable
 {
 public:
     XZ_Rect() {}
-    XZ_Rect(const glm::vec2& min, const glm::vec2& max, float y, std::shared_ptr<Material> mat) : m_min(min), m_max(max), m_y(y), m_material(mat) {}
+    XZ_Rect(const glm::vec2& min, const glm::vec2& max, float y, Material* mat) : m_min(min), m_max(max), m_y(y), m_material(mat) {}
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override
     {
@@ -72,13 +72,13 @@ public:
 private:
     glm::vec2 m_min, m_max;
     float m_y;
-    std::shared_ptr<Material> m_material;
+    Material* m_material;
 };
 class YZ_Rect : public Hittable
 {
 public:
     YZ_Rect() {}
-    YZ_Rect(const glm::vec2& min, const glm::vec2& max, float x, std::shared_ptr<Material> mat) : m_min(min), m_max(max), m_x(x), m_material(mat) {}
+    YZ_Rect(const glm::vec2& min, const glm::vec2& max, float x, Material* mat) : m_min(min), m_max(max), m_x(x), m_material(mat) {}
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override
     {
@@ -107,6 +107,6 @@ public:
 private:
     glm::vec2 m_min, m_max;
     float m_x;
-    std::shared_ptr<Material> m_material;
+    Material* m_material;
 };
 #endif

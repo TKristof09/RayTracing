@@ -6,6 +6,7 @@
 #include "Hittable.h"
 #include "3DMath/Random.h"
 #include "Texture.h"
+#include "Allocator.hpp"
 
 class Material
 {
@@ -22,8 +23,8 @@ public:
 class Lambertian : public Material
 {
 public:
-    Lambertian(const glm::vec3& albedo) : m_texture(std::make_shared<SolidColor>(albedo)) {}
-    Lambertian(std::shared_ptr<Texture> t) : m_texture(t) {}
+    Lambertian(const glm::vec3& albedo) : m_texture(g_materialAllocator.Allocate<SolidColor>(albedo)) {}
+    Lambertian(Texture* t) : m_texture(t) {}
     virtual bool Scatter(const Ray& r, const HitRecord& rec, glm::vec3& outAttenuation, Ray& outRay) const override
     {
         // glm::vec3 v = glm::RandomOnUnitSphere<float>();
@@ -40,15 +41,15 @@ public:
     }
 
 private:
-    std::shared_ptr<Texture> m_texture;
+    Texture* m_texture;
 };
 
 class Metal : public Material
 {
 public:
-    Metal(const glm::vec3& albedo, float fuzziness) : m_albedo(std::make_shared<SolidColor>(albedo)), m_fuzziness(fuzziness < 1 ? fuzziness : 1) {}
+    Metal(const glm::vec3& albedo, float fuzziness) : m_albedo(g_materialAllocator.Allocate<SolidColor>(albedo)), m_fuzziness(fuzziness < 1 ? fuzziness : 1) {}
 
-    Metal(std::shared_ptr<Texture> albedo, float fuzziness) : m_albedo(albedo), m_fuzziness(fuzziness < 1 ? fuzziness : 1) {}
+    Metal(Texture* albedo, float fuzziness) : m_albedo(albedo), m_fuzziness(fuzziness < 1 ? fuzziness : 1) {}
 
     virtual bool Scatter(const Ray& r, const HitRecord& rec, glm::vec3& outAttenuation, Ray& outRay) const override
     {
@@ -60,7 +61,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Texture> m_albedo;
+    Texture* m_albedo;
     float m_fuzziness;
 };
 
@@ -109,8 +110,8 @@ private:
 class Emissive : public Material
 {
 public:
-    Emissive(std::shared_ptr<Texture> t) : m_emissionTexture(t) {}
-    Emissive(const glm::vec3& color) : m_emissionTexture(std::make_shared<SolidColor>(color)) {}
+    Emissive(Texture* t) : m_emissionTexture(t) {}
+    Emissive(const glm::vec3& color) : m_emissionTexture(g_materialAllocator.Allocate<SolidColor>(color)) {}
     virtual bool Scatter(const Ray& r, const HitRecord& rec, glm::vec3& outAttenuation, Ray& outRay) const override
     {
         return false;
@@ -122,6 +123,6 @@ public:
     }
 
 private:
-    std::shared_ptr<Texture> m_emissionTexture;
+    Texture* m_emissionTexture;
 };
 #endif

@@ -6,6 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "glm/glm.hpp"
+#include "Allocator.hpp"
 
 class Texture
 {
@@ -18,7 +19,7 @@ class SolidColor : public Texture
 {
 public:
     SolidColor() {}
-    SolidColor(const glm::vec3 color) : m_color(color) {}
+    SolidColor(const glm::vec3& color) : m_color(color) {}
     SolidColor(float r, float g, float b) : m_color(glm::vec3(r, g, b)) {}
 
     virtual glm::vec3 Sample(const glm::vec2& uv, const glm::vec3& point) const override
@@ -34,8 +35,8 @@ class CheckerTexture : public Texture
 {
 public:
     CheckerTexture() {}
-    CheckerTexture(std::shared_ptr<Texture> odd, std::shared_ptr<Texture> even) : m_odd(odd), m_even(even) {}
-    CheckerTexture(const glm::vec3& c1, const glm::vec3& c2) : m_odd(std::make_shared<SolidColor>(c1)), m_even(std::make_shared<SolidColor>(c2)) {}
+    CheckerTexture(Texture* odd, Texture* even) : m_odd(odd), m_even(even) {}
+    CheckerTexture(const glm::vec3& c1, const glm::vec3& c2) : m_odd(g_materialAllocator.Allocate<SolidColor>(c1)), m_even(g_materialAllocator.Allocate<SolidColor>(c2)) {}
 
     virtual glm::vec3 Sample(const glm::vec2& uv, const glm::vec3& point) const override
     {
@@ -47,8 +48,8 @@ public:
     }
 
 private:
-    std::shared_ptr<Texture> m_odd;
-    std::shared_ptr<Texture> m_even;
+    Texture* m_odd;
+    Texture* m_even;
 };
 
 

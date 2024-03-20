@@ -12,7 +12,7 @@ struct HitRecord
     float t;
     glm::vec3 point;
     glm::vec3 normal;  // unit length, always points against the ray direction, use SetNormal()
-    std::shared_ptr<Material> material;
+    Material* material;
     glm::vec2 uv;
 
 

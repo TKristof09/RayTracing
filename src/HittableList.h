@@ -2,7 +2,6 @@
 #define HITTABLE_LIST_H
 
 #include "Hittable.h"
-#include <memory>
 #include <vector>
 #include "AABB.h"
 
@@ -11,7 +10,7 @@ class HittableList : public Hittable
 public:
     HittableList() {}
 
-    void Add(std::shared_ptr<Hittable> obj)
+    void Add(Hittable* obj)
     {
         m_objects.push_back(obj);
     }
@@ -22,7 +21,7 @@ public:
     auto& GetObjects() { return m_objects; }
 
 private:
-    std::vector<std::shared_ptr<Hittable>> m_objects;
+    std::vector<Hittable*> m_objects;
 };
 
 inline bool HittableList::Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const

@@ -11,7 +11,7 @@ class Sphere : public Hittable
 {
 public:
     Sphere() {}
-    Sphere(const glm::vec3& center, float radius, std::shared_ptr<Material> material) : m_center(center), m_radius(radius), m_material(material) {}
+    Sphere(const glm::vec3& center, float radius, Material* material) : m_center(center), m_radius(radius), m_material(material) {}
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override;
     virtual bool BoundingBox(AABB& outAABB) const override;
@@ -19,7 +19,7 @@ public:
 private:
     glm::vec3 m_center;
     float m_radius;
-    std::shared_ptr<Material> m_material;
+    Material* m_material;
 
     static glm::vec2 GetUV(const glm::vec3& point)
     {

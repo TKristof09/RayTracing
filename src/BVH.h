@@ -2,6 +2,7 @@
 #define BVH_H
 
 #include <iostream>
+#include "Allocator.hpp"
 #include "Hittable.h"
 #include "HittableList.h"
 #include "3DMath/Random.h"
@@ -10,8 +11,8 @@ class BVHNode : public Hittable
 {
 public:
     BVHNode();
-    BVHNode(HittableList& list) : BVHNode(list.GetObjects(), 0, list.GetObjects().size()) {}
-    BVHNode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, size_t end);
+    BVHNode(HittableList& list, LinearAllocator& allocator) : BVHNode(list.GetObjects(), 0, list.GetObjects().size(), allocator) {}
+    BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end, LinearAllocator& allocator);
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override;
     virtual bool BoundingBox(AABB& outAABB) const override
@@ -21,7 +22,8 @@ public:
     }
 
 private:
-    std::shared_ptr<Hittable> m_left, m_right;
+    Hittable* m_left;
+    Hittable* m_right;
     AABB m_aabb;
 };
 
@@ -36,13 +38,13 @@ bool BVHNode::Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) co
     return hitLeft || hitRight;
 }
 
-BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, size_t end)
+BVHNode::BVHNode(std::vector<Hittable*>& objects, size_t start, size_t end, LinearAllocator& allocator)
 {
     auto objectsModif = objects;  // create a modifiable vector
 
     int axis = math::RandomInt(0, 2);
 
-    auto comp = [axis](const std::shared_ptr<Hittable> lhs, const std::shared_ptr<Hittable> rhs)
+    auto comp = [axis](const Hittable* lhs, const Hittable* rhs)
     {
         AABB lhsBox;
         AABB rhsBox;
@@ -72,8 +74,8 @@ BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, 
         std::sort(objects.begin() + start, objects.begin() + end, comp);
 
         size_t mid = start + numObjects / 2;
-        m_left     = std::make_shared<BVHNode>(objects, start, mid);
-        m_right    = std::make_shared<BVHNode>(objects, mid, end);
+        m_left     = allocator.Allocate<BVHNode>(objects, start, mid, allocator);
+        m_right    = allocator.Allocate<BVHNode>(objects, mid, end, allocator);
     }
 
     AABB leftBox, rightBox;
