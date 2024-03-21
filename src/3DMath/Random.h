@@ -6,26 +6,36 @@
 
 namespace math
 {
+
 template<typename T>
-T RandomReal(T min = T(0.0), T max = T(1.0))
+T RandomReal()
 {
-    static std::uniform_real_distribution<T> distribution(min, max);
-    static thread_local std::mt19937_64 generator;
+    static std::uniform_real_distribution<T> distribution(0.0, 1.0);
+    static thread_local std::mt19937_64 generator{static_cast<long unsigned int>(time(0))};
     return T(distribution(generator));
+}
+template<typename T>
+T RandomReal(T min, T max)
+{
+    return RandomReal<T>() * (max - min) + min;
 }
 
 template<typename T>
 T RandomNormalReal()
 {
     static std::normal_distribution<T> distribution;
-    static thread_local std::mt19937_64 generator;
+    static thread_local std::mt19937_64 generator{static_cast<long unsigned int>(time(0))};
     return T(distribution(generator));
 }
-inline int RandomInt(int min = 0, int max = 1)
+inline int RandomInt()
 {
-    static std::uniform_int_distribution<int> distribution(min, max);
-    static thread_local std::mt19937 generator;
+    static std::uniform_int_distribution<int> distribution;
+    static thread_local std::mt19937 generator{static_cast<long unsigned int>(time(0))};
     return distribution(generator);
+}
+inline int RandomInt(int min, int max)
+{
+    return RandomInt() % (max - min) + min;
 }
 
 

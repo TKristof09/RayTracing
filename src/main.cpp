@@ -267,11 +267,6 @@ HittableList Perlin()
     objects.Add(globe);
     return objects;
 }
-// for some reason, using math::randomreal function in the final scene generation function messes up the render, so had to make a different random function for that. I have no idea why this is the case
-float RandomFloat(float min, float max)
-{
-    return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
-}
 
 
 HittableList FinalScene()
@@ -289,7 +284,7 @@ HittableList FinalScene()
             float z0 = -1000.0f + j * w;
             float y0 = 0.0f;
             float x1 = x0 + w;
-            float y1 = RandomFloat(1, 101);
+            float y1 = math::RandomReal<float>(1, 101);
             float z1 = z0 + w;
 
             boxes1.Add(g_shapeAllocator.Allocate<Box>(glm::vec3(x0, y0, z0), glm::vec3(x1, y1, z1), ground));
@@ -322,9 +317,9 @@ HittableList FinalScene()
     int ns      = 1000;
     for(int j = 0; j < ns; j++)
     {
-        float x = RandomFloat(0, 165);
-        float y = RandomFloat(0, 165);
-        float z = RandomFloat(0, 165);
+        float x = math::RandomReal<float>(0, 165);
+        float y = math::RandomReal<float>(0, 165);
+        float z = math::RandomReal<float>(0, 165);
         boxes2.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(x, y, z), 10, white));
     }
 
@@ -411,7 +406,7 @@ int main()
         break;
     }
     constexpr uint32_t numSamples = 1;
-    constexpr int maxDepth        = 40;
+    constexpr int maxDepth        = 50;
     constexpr float aspectRatio   = 1.f;
     16.0f / 9.0f;
 
