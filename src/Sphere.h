@@ -5,7 +5,9 @@
 #include <glm/gtx/norm.hpp>
 #include "AABB.h"
 #include "Hittable.h"
+#include "ONB.hpp"
 #include "glm/ext/scalar_constants.hpp"
+#include "3DMath/Random.h"
 
 class Sphere : public Hittable
 {
@@ -15,6 +17,26 @@ public:
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override;
     virtual bool BoundingBox(AABB& outAABB) const override;
+
+    virtual float PDFValue(const glm::vec3& origin, const glm::vec3& direction) const override
+    {
+        HitRecord rec;
+        if(!Hit(Ray(origin, direction), 0.001f, std::numeric_limits<float>::max(), rec))
+            return 0;
+
+        float cosThetaMax = sqrt(1 - m_radius * m_radius / glm::length2(m_center - origin));
+        float solidAngle  = 2 * glm::pi<float>() * (1 - cosThetaMax);
+
+        return 1 / solidAngle;
+    }
+    virtual glm::vec3 Random(const glm::vec3& origin) const override
+    {
+        glm::vec3 direction   = m_center - origin;
+        float distanceSquared = glm::length2(direction);
+        ONB uvw(direction);
+
+        return uvw.Local(RandomToSphere(m_radius, distanceSquared));
+    }
 
 private:
     glm::vec3 m_center;
@@ -27,6 +49,20 @@ private:
         float phi   = atan2(-point.z, point.x) + glm::pi<float>();
 
         return glm::vec2(phi / (2 * glm::pi<float>()), theta / glm::pi<float>());
+    }
+
+    static glm::vec3 RandomToSphere(float radius, float distanceSquared)
+    {
+        float r1 = math::RandomReal<float>();
+        float r2 = math::RandomReal<float>();
+        float z  = 1 + r2 * (sqrt(1 - radius * radius / distanceSquared) - 1);
+
+        float phi = 2 * glm::pi<float>() * r1;
+        float sq  = sqrt(1 - z * z);
+        float x   = cos(phi) * sq;
+        float y   = sin(phi) * sq;
+
+        return glm::vec3(x, y, z);
     }
 };
 

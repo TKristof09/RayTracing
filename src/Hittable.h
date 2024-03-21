@@ -31,6 +31,15 @@ class Hittable
 public:
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const = 0;
     virtual bool BoundingBox(AABB& outAABB) const                                      = 0;
+
+    virtual float PDFValue(const glm::vec3& origin, const glm::vec3& direction) const
+    {
+        return 0;
+    }
+    virtual glm::vec3 Random(const glm::vec3& origin) const
+    {
+        return glm::vec3(1, 0, 0);
+    }
 };
 
 #endif

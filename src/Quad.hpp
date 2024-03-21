@@ -2,6 +2,7 @@
 
 #include "AABB.h"
 #include "Hittable.h"
+#include "3DMath/Random.h"
 
 class Quad : public Hittable
 {
@@ -9,8 +10,9 @@ public:
     Quad(glm::vec3 Q, glm::vec3 U, glm::vec3 V, Material* mat) : m_Q(Q), m_U(U), m_V(V), m_material(mat)
     {
         glm::vec3 n = glm::cross(m_U, m_V);
-        m_normal    = glm::normalize(n);
-        m_W         = n / glm::dot(n, n);
+        m_area      = glm::length(n);
+        m_normal    = n / m_area;
+        m_W         = n / glm::dot(n, n);  // TODO try m_normal / m_area
     }
 
     virtual bool Hit(const Ray& r, float tMin, float tMax, HitRecord& outRecord) const override
@@ -45,9 +47,29 @@ public:
         return true;
     }
 
+    virtual float PDFValue(const glm::vec3& origin, const glm::vec3& direction) const override
+    {
+        HitRecord rec;
+        if(!Hit(Ray(origin, direction), 0.001f, std::numeric_limits<float>::max(), rec))
+            return 0;
+
+        float distanceSquared = rec.t * rec.t * glm::dot(direction, direction);
+        float cosine          = glm::abs(glm::dot(rec.normal, direction)) / glm::length(direction);
+
+        return distanceSquared / (cosine * m_area);
+    }
+
+    virtual glm::vec3 Random(const glm::vec3& origin) const override
+    {
+        glm::vec3 p = m_Q + m_U * math::RandomReal<float>() + m_V * math::RandomReal<float>();
+        return p - origin;
+    }
+
+
 private:
     glm::vec3 m_Q, m_U, m_V;
     glm::vec3 m_W;
     glm::vec3 m_normal;
     Material* m_material;
+    float m_area;
 };

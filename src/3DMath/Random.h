@@ -3,6 +3,7 @@
 
 #include <random>
 #include "glm/glm.hpp"
+#include "glm/ext/scalar_constants.hpp"
 
 namespace math
 {
@@ -49,14 +50,9 @@ glm::vec<3, T> RandomInUnitSphere()
 template<typename T>
 glm::vec<2, T> RandomInUnitDisk()
 {
-    while(true)
-    {
-        glm::vec<2, T> res(RandomNormalReal<T>(), RandomNormalReal<T>());
-        if(glm::dot(res, res) >= T(1))
-            continue;
-        else
-            return res;
-    }
+    T r     = RandomReal<T>();
+    T theta = RandomReal<T>() * glm::pi<T>() * 2.0;
+    return glm::vec<2, T>(r * glm::cos(theta), r * glm::sin(theta));
 }
 template<typename T>
 glm::vec<3, T> RandomOnUnitSphere()
@@ -64,5 +60,13 @@ glm::vec<3, T> RandomOnUnitSphere()
     glm::vec<3, T> res(RandomNormalReal<T>(), RandomNormalReal<T>(), RandomNormalReal<T>());
     return glm::normalize(res);
 }
+
+template<typename T>
+glm::vec<3, T> RandomCosineHemisphere()
+{
+    auto onDisk = RandomInUnitDisk<T>();
+    T z         = glm::sqrt(1 - onDisk.x * onDisk.x - onDisk.y * onDisk.y);
+    return glm::vec<3, T>(onDisk.x, onDisk.y, z);
 }
+}  // namespace math
 #endif

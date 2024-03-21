@@ -35,37 +35,44 @@ LinearAllocator g_materialAllocator(MATERIAL_ALLOCATOR_SIZE);
 
 
 glm::vec3 RayColor(const Ray& r, const glm::vec3& background,
-                   const Hittable& world, int depth)
+                   const Hittable& world, const Hittable& lights, int depth)
 {
     if(depth <= 0)
-        return glm::vec3(0);
+        return glm::vec3(1);
     HitRecord rec;
 
-    if(world.Hit(r, 0.001f, std::numeric_limits<float>::infinity(), rec)) [[likely]]
+    if(!world.Hit(r, 0.001f, std::numeric_limits<float>::infinity(), rec))
+        return background;
+
+    ScatterRecord scatterRec;
+    glm::vec3 emitted = rec.material->Emitted(rec, rec.uv, rec.point);
+    if(!rec.material->Scatter(r, rec, scatterRec))
+        return emitted;
+
+    if(scatterRec.pdf == nullptr)
     {
-        // Hemispherical scattering
-        // glm::vec3 v = math::RandomInUnitSphere<float>();
-        // glm::vec3 target = rec.point + (math::dot(v, rec.normal) > 0.0f ? v :
-        // -v);
-
-        // Lambertian scattering
-        // glm::vec3 target = rec.point + rec.normal +
-        // math::RandomOnUnitSphere<float>();
-
-        Ray scattered;
-        glm::vec3 attenuation;
-        glm::vec3 emitted = rec.material->Emitted(rec.uv, rec.point);
-        if(rec.material->Scatter(r, rec, attenuation, scattered)) [[likely]]
-            return emitted + attenuation * RayColor(scattered, background, world, depth - 1);
-        else
-            return emitted;
-
-        // return 0.5f * RayColor(Ray(rec.point, target - rec.point), world, depth -
-        // 1);
+        return emitted + scatterRec.attenuation * RayColor(scatterRec.skipPDFRay, background, world, lights, depth - 1);
     }
 
-    // background
-    return background;
+
+    HittablePDF lightPDF(rec.point, lights);
+
+    MixturePDF mixturePDF(&lightPDF, scatterRec.pdf.get());
+    Ray scattered(rec.point, mixturePDF.Generate());
+    float pdfValue = mixturePDF.Value(scattered.GetDir());
+
+    float scatteringPDF   = rec.material->ScatteringPDF(r, rec, scattered);
+    // if(pdfValue == 0)
+    // {
+    //     std::cout << "NaN\n";
+    //     return glm::vec3(1);
+    // }
+    glm::vec3 sampleColor = RayColor(scattered, background, world, lights, depth - 1);
+
+    glm::vec3 scatterColor = scatterRec.attenuation * sampleColor * scatteringPDF / pdfValue;
+
+
+    return emitted + scatterColor;
 }
 
 std::string GetCurrentFilename(const std::string& base,
@@ -197,14 +204,14 @@ HittableList CornellBox()
     auto* red   = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.65, .05, .05));
     auto* white = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.73, .73, .73));
     auto* green = g_materialAllocator.Allocate<Lambertian>(glm::vec3(.12, .45, .15));
-    auto* light = g_materialAllocator.Allocate<Emissive>(70.0f * glm::vec3(1));
+    auto* light = g_materialAllocator.Allocate<Emissive>(7.0f * glm::vec3(1));
 
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), glm::vec3(0, 0, 555), green));
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(0, 555, 0), glm::vec3(0, 0, 555), red));
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(555, 0, 0), glm::vec3(0, 0, 555), white));
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(555, 555, 555), glm::vec3(-555, 0, 0), glm::vec3(0, 0, -555), white));
     objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 555), glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), white));
-    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(113, 554, 127), glm::vec3(330, 0, 0), glm::vec3(0, 0, 305), light));
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(213, 554, 227), glm::vec3(130, 0, 0), glm::vec3(0, 0, 105), light));
     // objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(0, 0, 0), glm::vec3(555, 0, 0), glm::vec3(0, 555, 0), white));
 
     Hittable* box1 = g_shapeAllocator.Allocate<Box>(glm::vec3(0, 0, 0), glm::vec3(165, 330, 165), white);
@@ -212,17 +219,21 @@ HittableList CornellBox()
     box1           = g_shapeAllocator.Allocate<Translate>(box1, glm::vec3(265, 0, 295));
     objects.Add(box1);
 
-    Hittable* box2 = g_shapeAllocator.Allocate<Box>(glm::vec3(0, 0, 0), glm::vec3(165, 165, 165), white);
-    box2           = g_shapeAllocator.Allocate<RotateY>(box2, -18);
-    box2           = g_shapeAllocator.Allocate<Translate>(box2, glm::vec3(130, 0, 65));
-    objects.Add(box2);
-    // objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 400), 90.f,
-    //                                               g_materialAllocator.Allocate<Dielectric>(1.5f)));
-    // objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(400, 90, 300), 85.f,
-    //                                               g_materialAllocator.Allocate<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 0.1f)));
-
+    // Hittable* box2 = g_shapeAllocator.Allocate<Box>(glm::vec3(0, 0, 0), glm::vec3(165, 165, 165), white);
+    // box2           = g_shapeAllocator.Allocate<RotateY>(box2, -18);
+    // box2           = g_shapeAllocator.Allocate<Translate>(box2, glm::vec3(130, 0, 65));
+    // objects.Add(box2);
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 190), 90.f, g_materialAllocator.Allocate<Dielectric>(1.5f)));
     return objects;
 }
+HittableList CornellBoxLights()
+{
+    HittableList objects;
+    objects.Add(g_shapeAllocator.Allocate<Quad>(glm::vec3(113, 554, 127), glm::vec3(330, 0, 0), glm::vec3(0, 0, 305), nullptr));
+    objects.Add(g_shapeAllocator.Allocate<Sphere>(glm::vec3(190, 90, 190), 90.f, nullptr));
+    return objects;
+}
+
 
 HittableList SmokeCornellBox()
 {
@@ -332,6 +343,7 @@ int main()
 {
     // Scene
     HittableList world;
+    HittableList lights;
     glm::vec3 camPos;
     glm::vec3 lookAt;
     float vFOV;
@@ -339,10 +351,11 @@ int main()
     float aperture;
     glm::vec3 background;
 
-    switch(7)
+    switch(4)
     {
     case 1:
         world      = RandomScene();
+        // lights =
         camPos     = glm::vec3(13, 2, 3);
         lookAt     = glm::vec3(0, 0, 0);
         vFOV       = 20.f;
@@ -352,6 +365,7 @@ int main()
         break;
     case 2:
         world      = Earth();
+        // lights =
         camPos     = glm::vec3(0, 2, 20);
         lookAt     = glm::vec3(0, 0, 0);
         vFOV       = 20.f;
@@ -361,6 +375,7 @@ int main()
         break;
     case 3:
         world      = EmissionScene();
+        // lights =
         camPos     = glm::vec3(26, 3, 6);
         lookAt     = glm::vec3(0, 2, 0);
         vFOV       = 20.f;
@@ -370,6 +385,7 @@ int main()
         break;
     case 4:
         world      = CornellBox();
+        lights     = CornellBoxLights();
         camPos     = glm::vec3(278, 278, -800);
         lookAt     = glm::vec3(278, 278, 1);
         vFOV       = 40.f;
@@ -379,6 +395,7 @@ int main()
         break;
     case 5:
         world      = Perlin();
+        // lights =
         camPos     = glm::vec3(0, 2, 20);
         lookAt     = glm::vec3(0, 0, 0);
         vFOV       = 20.f;
@@ -388,6 +405,7 @@ int main()
         break;
     case 6:
         world      = SmokeCornellBox();
+        // lights =
         camPos     = glm::vec3(278, 278, -800);
         lookAt     = glm::vec3(278, 278, 1);
         vFOV       = 40.f;
@@ -397,6 +415,7 @@ int main()
         break;
     case 7:
         world      = FinalScene();
+        // lights =
         camPos     = glm::vec3(478, 278, -600);
         lookAt     = glm::vec3(278, 278, 0);
         vFOV       = 40.f;
@@ -465,11 +484,19 @@ int main()
                                   float u = (x + math::RandomReal<float>()) / (imageWidth - 1);
                                   float v = (y + math::RandomReal<float>()) / (imageHeight - 1);
 
-                                  color += RayColor(cam.GetRay(u, v), background, world, maxDepth);
+                                  color += RayColor(cam.GetRay(u, v), background, world, lights, maxDepth);
                               }
                               float r = glm::max(color.r, 0.0f);
                               float g = glm::max(color.g, 0.0f);
                               float b = glm::max(color.b, 0.0f);
+
+                              // NaN check
+                              if(r != r)
+                                  r = 0;
+                              if(g != g)
+                                  g = 0;
+                              if(b != b)
+                                  b = 0;
 
 
                               // gamma correct for gamma = 2
@@ -511,4 +538,6 @@ int main()
         }
     } while(mfb_wait_sync(window));
     SaveImage(stbImageData, imageWidth, imageHeight, frameIndex * numSamples);
+    g_materialAllocator.Reset();
+    g_shapeAllocator.Reset();
 }
