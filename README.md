@@ -1,5 +1,9 @@
 # RayTracing
-Path tracer following RayTracing In One Weekend
+Path tracer following RayTracing In One Weekend with a few changes:
+- Real-time output while the rays accumulate
+- Multi-threading
+- Use of an arena allocator to improve cache locality of objects and materials for a large improvement in performance
+- Few other smaller performance improvements
 
 Recreated the image that is at the end of the first book
 
